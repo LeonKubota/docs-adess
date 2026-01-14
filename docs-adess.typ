@@ -104,7 +104,7 @@ Vytvořte konzolovou aplikaci pro procedurální syntézu zvuků motorů určeno
 #heading(level: 2, outlined: false)[Platforma:]
 - C
 
-#v(1.7cm)
+#v(1fr)
 
 #table(
   columns: (1fr, 1fr, 1fr),
@@ -132,10 +132,27 @@ Adess is an application that runs in the terminal, it procedurally generates the
 
 #heading(outlined: false)[Zusammenfassung]
 
-#pagebreak()
-
+#v(1fr)
 
 #heading(outlined: false)[Čestné prohlášení]
+Prohlašuji, že jsem jediným autorem tohoto projektu, všechny citace jsou řádně označené a všechna použitá literatura a další zdroje jsou v práci uvedené. Tímto dle zákona 121/2000 Sb. (tzv. Autorský zákon) ve znění pozdějších předpisů uděluji bezúplatně škole Gymnázium, Praha 6, Arabská 14 oprávnění k výkonu práva na rozmnožování díla (§ 13) a práva na sdělování díla veřejnosti (§ 18) na dobu časově neomezenou a bez omezení územního rozsahu.
+
+#v(1.5cm)
+
+#table(
+  columns: (1fr, 1fr, 1fr),
+  align: center,
+  stroke: none,
+  row-gutter: -0.4em,
+
+  [],
+  [#line(stroke: (dash: "dashed", paint: rgb("#808080")), length: 92%)],
+  [#line(stroke: (dash: "dashed", paint: rgb("#808080")), length: 92%)],
+
+  [],
+  [datum podpisu],
+  [podpis řešitele],
+)
 
 #pagebreak()
 
@@ -146,6 +163,11 @@ Adess is an application that runs in the terminal, it procedurally generates the
 
 
 = Úvod
+Tvorba zvuku motorů pro využití ve animaci je velice složitá, konvenčním způsobem je nahrát zvukové stopy skutečného motoru a pomocí komplexních digitálních manipulací získat finálnú zvuk. Takováto tvorba zvuku je velice časově náročná, umožňuje však precizní úpravu zvuku pro tvorbu působivých výsledků. Tento způsob je však zcela nevyhovující menším studiům či jednotlivcům, kteří nedisponují stovky hodin a neovládají tuto tvůrčí disciplínu. @MIX:EngineFXWithPersonalityInPixarsCars
+
+Druhým postupem je zvukovou stopu generovat, toho lze docílit simulací tlakových vln v motoru nebo syntézou, tedy tvorbou zvuku pomocí matematických algoritmů. V této práci využívám pro generaci zvuku spalovacích motorů syntetický přístup.
+
+
 
 #pagebreak()
 
