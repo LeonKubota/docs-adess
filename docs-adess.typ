@@ -1,29 +1,36 @@
+// For word count
+#import "@preview/wordometer:0.1.4": word-count, total-words
+#show: word-count.with(exclude: heading, math)
+
+
 // Making the footer for the title page
 #set page(footer: context {
-  if counter(page).get().first() == 1 {
+  let page = counter(page).get().first()
+
+  if page == 1 {
     grid(
       columns: (1fr, 1fr, 1fr),
       align(left)[*Programování*],
       align(center)[*Leon Kubota, 4.E*],
       align(right)[*Leden 2025*],
     )
+  } else {
+    align(center)[#page]
   }
 },
 header: context {
   if counter(page).get().first() == 1 {
     text(18pt)[#align(center)[*GYMNÁZIUM, PRAHA 6, ARABSKÁ 14*]]
   }
-}
+},
 )
 
 // First page
-#v(6cm)
-#columns(2, gutter: 1em)[
-  #align(center)[#image("images/AdessLogo.png", width: 60%)]
-  #colbreak()
-  #align(center)[#image("images/GyarabLogo.png", width: 70%)]
-]
+#v(5.5cm)
+#align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
+//#align(center)[#image("images/GyarabLogo.png", width: 20%)]
 #text(18pt)[#align(center)[*Adess -- umělecky dirigovaný syntetizér zvuku motorů*]]
+#highlight[Počet slov: #total-words, normostran: test, stran: #context counter(page).final().first()]
 
 #set text(
   lang: "cs"
@@ -47,6 +54,7 @@ header: context {
 #set par(
   justify: true
 )
+
 
 #pagebreak()
 
@@ -159,6 +167,9 @@ Prohlašuji, že jsem jediným autorem tohoto projektu, všechny citace jsou ř�
 
 #outline()
 
+#set heading(numbering: "1.1.1")
+#set page(numbering: "1")
+
 #pagebreak()
 
 
@@ -166,6 +177,99 @@ Prohlašuji, že jsem jediným autorem tohoto projektu, všechny citace jsou ř�
 Tvorba zvuku motorů pro využití ve animaci je velice složitá, konvenčním způsobem je nahrát zvukové stopy skutečného motoru a pomocí komplexních digitálních manipulací získat finálnú zvuk. Takováto tvorba zvuku je velice časově náročná, umožňuje však precizní úpravu zvuku pro tvorbu působivých výsledků. Tento způsob je však zcela nevyhovující menším studiům či jednotlivcům, kteří nedisponují stovky hodin a neovládají tuto tvůrčí disciplínu. @MIX:EngineFXWithPersonalityInPixarsCars
 
 Druhým postupem je zvukovou stopu generovat, toho lze docílit simulací tlakových vln v motoru nebo syntézou, tedy tvorbou zvuku pomocí matematických algoritmů. V této práci využívám pro generaci zvuku spalovacích motorů syntetický přístup.
+
+#pagebreak()
+
+
+= Použité technologie
+Celý projekt je napsán v programovacím jazyce _C_ (konkrétně _C99_) pro jeho výpočetní účinnost a možnost bližšího kontaktu s _hardwarem_. Tento jazyk jsem zvolil také kvůli svému zájmu o studium letectví a kosmonautiky, kde se hojně využívá pro programování _embedded_ systémů.\
+
+Pro zkompilování jsem využil _CMake_, který podporuje mnoho _compilerů_. Osobně jsem zvolil běžně používaný _compiler_ _GCC_ (_GNU Compiler Collection_). @CMAKE:CMake @GCC:GNUCompilerCollection
+
+Již zmíněné technologie jsou vše, co je nutné pro zkompilování a spuštění projektu (uvažuji, že standardní knihovny uživatel má). Při psaní zdrojového kódu jsem však využil několika dalších nástrojů:\
+
+- _Sonic Visualiser_ -- _open-source_ nástroj pro analýzu zvuku, umožňuje spektrální a vlnovou analýzu. @CDM:SonicVisualiser
+- _Spek_ -- jednodušší, zato rychlejší a uživatelsky přívětivější nástroj pro analýzu zvuku. @AK:Spek
+- _Valgrind_ -- nástroj běžící v příkazové řádce pro analýzu paměti programu za běhu, je velice užitečný pro zamezení únikům paměti
+
+
+= Zvuk
+Abychom dokázaji zvuk tvořit, je potřeba mu alespoň povrchově porozumět. Jako zvuk označujeme vlnění částic vzduchu. Čím rychleji tyto částice kmitají (jejich frekvence), tím vyšší tón slyšíme. Čím větší je amplituda vlnění, tím hlasitější zvuk slyšíme. Jako lidé slyšíme zvuky o frekvencích od $20$ až $20000$ Hz a hlasitosti alespoň $0$ dB. @DOSITS:Loudness
+
+== Digitální zvuk 
+Zvuk je ukládán jako pole vzorků, které určují, v jaké poloze se má nacházet oscilátor v reproduktoru. V tomto projektu je využit formát _WAV_.\
+
+V jednotlivých vzorcích je tedy uložena amplituda v jednotlivém čase. Datový typ vzorku se liší podle rozlišení vzorků (anglicky _bit depth_), běžně nabývá hodnot 8, 16, 24 a 32. Má aplikace dokáže exportovat v těchto _bit ratech_ s využitím datových typů ```c uint8_t``` pro _8-bit_ audio, ```c int16_t``` pro _16-bit_ audio a ```c float``` pro _32-bit_ audio. Pro _24-bit_ audio jsem zvolil zabalení do tří ```c uint8_t``` místo jednoho ```c int32_t``` s nulovým vycpáváním.
+
+_Sample rate_ označuje počet vzorků zaznamenaných na každou sekundu. Obvykle se používá hodnota $44100$, jelikož s ní dokážeme zaznamenat celé spektrum lidsky slyšitelného zvuku. Při příliš nízkých _sample ratech_ dochází k _aliasování_, což je nežádoucí artefakt plynoucí z příliš vysoké frekvence. Tato konkrétní frekvence, při níž dochází k _aliasování_, se nazývá _Nyquistova_. Je rovna polovině _sample ratu_. V mé aplikaci si uživatel může zvolit libovolný _sample rate_.
+
+#pagebreak()
+
+= Příkazy
+
+= Ukládání dat
+Data se v _Adess_ ukládají do souborů
+
+
+#pagebreak()
+
+= Postup _renderování_ zvuku
+Uživatel pomocí příkazu `adess render` se jménem scény jako argument spustí několikafázový proces _renderování_. Ten je podrobně popsán v následujících podkapitolách.
+
+== Čtení vstupních dat
+Nejprve se otevře soubor projektu a jeho data se po kontrole syntaxe parsují do struktury ```c struct Project```. Poté se toto opakuje se scénou a nakonec se souborem motoru. 
+
+== Předvýpočetní fáze
+V této fázi se předvypočítají důležitá pole pro následující fáze. Tyto výpočty probíhají paralelně.
+
+=== Interpolace klíčových snímků a z nich plynoucích hodnot
+První vlákno lineárně interpoluje klíčové snímky pomocí rovnice (@RV:interpolace[]), výstupem je pole frekvencí, pole otáček, pole fází, pole zátěže a pole násobitelů nízkofrekvenčního šumu.
+$ h = h_0 + (t - t_0) dot (h_1 - h_0) / (t_1 - t_0) $ <RV:interpolace>
+$h$ je okamžitá hodnota, $h_0$ a $h_1$ jsou hodnoty předchozího a následujícího klíčového snímku\
+$t$ je čas, $t_0$ a $t_1$ jsou časy předchozího a následujícího klíčového snímku\
+
+Otáčky jsou vypočítány pomocí otáčkové rovnice (@RV:otacky[]).
+$ o t = (f dot 60) / n \/ v $ <RV:otacky>
+$o t$ jsou otáčky [ot $dot$ s#super[-1]]\
+$f$ je frekvence [Hz]\
+$n$ je inverzní počet pracovních dob za sekundu (2 pro čtyřdobé motory a 1 pro dvoudobé)\
+$v$ je počet válců
+
+Fázi vypočítáme pomocí rovnice (@RV:faze[]).
+$ phi_n = sum^(n-1)_(i = 0) tau dot f[i] dot Delta t $ <RV:faze>
+
+V programu vypočítáme rovnici (@RV:faze[]) takto:
+```c
+double phase = 0; // Musí být double, jelikož float neposkytuje dostatečnou přesnost
+
+while (i < scene->sampleCount) {
+  phase += TAU * frequencyBuffer[i] * timeStep;
+  phaseBuffer[i] = phase;
+  i++;
+}
+```
+
+Násobitel nízkofrekvenčního šumu vypočítáme pomocí rovnice (@RV:nasobitelSumu[]).
+$ n = s dot ((-o t^2 - 2 dot o t dot o t_v) / p - (o t_v) / p + 1) $ <RV:nasobitelSumu>
+
+$n$ je násobitel nízkofrekvenčního šumu\
+$s$ je síla šumu\
+$o t$ a $o t_v$ jsou okamžité otáčky a otáčky ve volnoběhu\
+$p$ je pokles (vzdálenost od volnoběhu ve které je šum nulový, v otáčkách)
+
+=== Generace stabilního hnědého šumu
+
+=== Generace nízkofrekvenčního šumu
+
+== Výpočetní fáze
+
+== Kombinační fáze
+
+== _Post-processing_ fáze
+
+
+#pagebreak()
+= Závěr
 
 
 
