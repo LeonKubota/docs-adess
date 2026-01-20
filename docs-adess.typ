@@ -1,7 +1,5 @@
-// For word count
 #import "@preview/wordometer:0.1.4": word-count, total-words
-#show: word-count.with(exclude: heading, math)
-
+#show: word-count
 
 // Making the footer for the title page
 #set page(footer: context {
@@ -30,7 +28,7 @@ header: context {
 #align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
 //#align(center)[#image("images/GyarabLogo.png", width: 20%)]
 #text(18pt)[#align(center)[*Adess -- umělecky dirigovaný syntetizér zvuku motorů*]]
-#highlight[Počet slov: #total-words, normostran: test, stran: #context counter(page).final().first()]
+#text(18pt)[#align(center)[#highlight[*#total-words / 6000*]]]
 
 #set text(
   lang: "cs"
@@ -258,14 +256,77 @@ $o t$ a $o t_v$ jsou okamžité otáčky a otáčky ve volnoběhu\
 $p$ je pokles (vzdálenost od volnoběhu ve které je šum nulový, v otáčkách)
 
 === Generace stabilního hnědého šumu
+Hnědý šum je šum, který je tvořen Brownovým pohybem, lze získat integrováním bílého šumu. V aplikaci je využit jako obecný zdroj náhodnosti ve většině funkcí. @WIKI:BrownianNoise\
+
+Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomuto algoritmu jsou náhodná čísla generována velice rychle a zároveň opakovatelně (dle počáteční hodnoty proměnné `state`. @WIKI:Xorshift
+```c
+while (i < scene->sampleCount) {
+  // Implementace algoritmu Xorshift ve 32-bitové verzi
+  *state ^= *state << 13;
+  *state ^= *state >> 17;
+  *state ^= *state << 5;
+
+  // Přepočítání na hodnoty -1.0 až 1.0
+  lastBrown += ((*state / (double) UINT32_MAX) * 2.0f - 1.0f) * 0.02f;
+  if (lastBrown > 1.0f) lastBrown = 1.0f;
+  if (lastBrown < -1.0f) lastBrown = -1.0f;
+
+  stableBrownNoiseBuffer[i] = lastBrown;
+
+  i++;
+}
+```
+
+Hodnoty jsou dále stabilizovány a vyhlazeny pomocí zprůměrování vzorků dle Gaussova rozdělení. Díky tomuto kroku působí šum přirozeněji. 
+
+=== Generace růžového šumu
+Tento šum je využit při generaci zvuku klapání ventilů, je velmi podobný bílému šumu, působí však přirozeněji a méně uměle. @RRT:PinkNoise
+
+Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci náhodných čísel byl použit _32-bitový_ `Xorshift`, který však v ukázce Kód: @C:PinkNoise[] není vypsán.
+#figure(
+  ```C
+  while (i < scene->sampleCount) {
+    // Implementace algoritmu Xorshift ve 32-bitové verzi
+    ...
+
+    // Generace růžového šumu pomocí Voss-McCartenova algoritmu s 32 iteracemi
+    sum = 0.0f;
+    for (n = 0; n < 31; n++) {
+      pinkBuffer[n] = (pinkBuffer[n] + randomFloat) * 0.5f;
+      sum += pinkBuffer[n];
+    }
+    pinkNoiseBuffer[i] = sum * 0.03125f; // Vypočítání průměrné hodnoty
+
+    i++;
+}
+```
+) <C:PinkNoise>
 
 === Generace nízkofrekvenčního šumu
+Nízkofrekvenční šum je využit při generaci základního zvuku motoru v otáčkách blízko otáčkám volnoběhu. Pro jeho generaci je také využit _32-bitový_ `Xorshift`.
+
+#pagebreak()
+
 
 == Výpočetní fáze
+V této fázi jsou paralelně vypočteny vzorky jednotlivých zvukových stop. Konkrétně jde o vzorky základní zvukové stopy motoru a o vzorky zvuku klapání ventilů.
+
+=== Základní zvuková stopa
+
+=== Zvuk klapání ventilů
+
+#pagebreak()
+
 
 == Kombinační fáze
+V této fázi jsou zkombinovány stopy vzorků z minulé fáze na základě požadavků uživatele.
+
+#pagebreak()
+
 
 == _Post-processing_ fáze
+
+== Zapisovací fáze
 
 
 #pagebreak()
