@@ -1,5 +1,5 @@
-#import "@preview/wordometer:0.1.4": word-count, total-words
-#show: word-count
+//#import "@preview/wordometer:0.1.4": word-count, total-words
+//#show: word-count
 
 // Making the footer for the title page
 #set page(footer: context {
@@ -28,7 +28,7 @@ header: context {
 #align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
 //#align(center)[#image("images/GyarabLogo.png", width: 20%)]
 #text(18pt)[#align(center)[*Adess -- umělecky dirigovaný syntetizér zvuku motorů*]]
-#text(18pt)[#align(center)[#highlight[*#total-words / 6000*]]]
+//#text(18pt)[#align(center)[#highlight[*#total-words / 6000*]]]
 
 #set text(
   lang: "cs"
@@ -52,6 +52,14 @@ header: context {
 #set par(
   justify: true
 )
+
+// Raw code
+#set raw(
+  tab-size: 4,
+  syntaxes: "syntax.sublime-syntax",
+  theme: "theme.tmTheme"
+)
+#show raw: set text(font: "PT Mono")
 
 
 #pagebreak()
@@ -236,16 +244,19 @@ $v$ je počet válců
 Fázi vypočítáme pomocí rovnice (@RV:faze[]).
 $ phi_n = sum^(n-1)_(i = 0) tau dot f[i] dot Delta t $ <RV:faze>
 
-V programu vypočítáme rovnici (@RV:faze[]) takto:
-```c
-double phase = 0; // Musí být double, jelikož float neposkytuje dostatečnou přesnost
+V programu vypočítáme rovnici (@RV:faze[]) pomocí kódu uvedeného ve výpisu @C:Phase[].
+#figure(
+  ```c
+  double phase = 0; // Musí být double, jelikož float neposkytuje dostatečnou přesnost
 
-while (i < scene->sampleCount) {
-  phase += TAU * frequencyBuffer[i] * timeStep;
-  phaseBuffer[i] = phase;
-  i++;
-}
-```
+  while (i < scene->sampleCount) {
+    phase += TAU * frequencyBuffer[i] * timeStep;
+    phaseBuffer[i] = phase;
+    i++;
+  }
+  ```,
+  caption: [Výpočet fáze],
+) <C:Phase>
 
 Násobitel nízkofrekvenčního šumu vypočítáme pomocí rovnice (@RV:nasobitelSumu[]).
 $ n = s dot ((-o t^2 - 2 dot o t dot o t_v) / p - (o t_v) / p + 1) $ <RV:nasobitelSumu>
@@ -256,37 +267,40 @@ $o t$ a $o t_v$ jsou okamžité otáčky a otáčky ve volnoběhu\
 $p$ je pokles (vzdálenost od volnoběhu ve které je šum nulový, v otáčkách)
 
 === Generace stabilního hnědého šumu
-Hnědý šum je šum, který je tvořen Brownovým pohybem, lze získat integrováním bílého šumu. V aplikaci je využit jako obecný zdroj náhodnosti ve většině funkcí. @WIKI:BrownianNoise\
+Hnědý šum je šum, který je tvořen Brownovým pohybem, lze získat integrováním bílého šumu. V aplikaci je využit jako obecný zdroj náhodnosti ve většině funkcí, viz výpis @C:BrownNoise[]. //@WIKI:BrownianNoise\
 
-Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomuto algoritmu jsou náhodná čísla generována velice rychle a zároveň opakovatelně (dle počáteční hodnoty proměnné `state`. @WIKI:Xorshift
-```c
-while (i < scene->sampleCount) {
-  // Implementace algoritmu Xorshift ve 32-bitové verzi
-  *state ^= *state << 13;
-  *state ^= *state >> 17;
-  *state ^= *state << 5;
+Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomuto algoritmu jsou náhodná čísla generována velice rychle a zároveň opakovatelně (dle počáteční hodnoty proměnné `state`). //@WIKI:Xorshift
+#figure(
+  ```c
+  while (i < scene->sampleCount) {
+    // Implementace algoritmu Xorshift ve 32-bitové verzi
+    *state ^= *state << 13;
+    *state ^= *state >> 17;
+    *state ^= *state << 5;
 
-  // Přepočítání na hodnoty -1.0 až 1.0
-  lastBrown += ((*state / (double) UINT32_MAX) * 2.0f - 1.0f) * 0.02f;
-  if (lastBrown > 1.0f) lastBrown = 1.0f;
-  if (lastBrown < -1.0f) lastBrown = -1.0f;
+    // Přepočítání na hodnoty -1.0 až 1.0
+    lastBrown += ((*state / (double) UINT32_MAX) * 2.0f - 1.0f) * 0.02f;
+    if (lastBrown > 1.0f) lastBrown = 1.0f;
+    if (lastBrown < -1.0f) lastBrown = -1.0f;
 
-  stableBrownNoiseBuffer[i] = lastBrown;
+    stableBrownNoiseBuffer[i] = lastBrown;
 
-  i++;
-}
-```
+    i++;
+  }
+  ```,
+  caption: [Generace hnědého šumu],
+) <C:BrownNoise>
 
 Hodnoty jsou dále stabilizovány a vyhlazeny pomocí zprůměrování vzorků dle Gaussova rozdělení. Díky tomuto kroku působí šum přirozeněji. 
 
 === Generace růžového šumu
-Tento šum je využit při generaci zvuku klapání ventilů, je velmi podobný bílému šumu, působí však přirozeněji a méně uměle. @RRT:PinkNoise
+Tento šum je využit při generaci zvuku klapání ventilů, je velmi podobný bílému šumu, působí však přirozeněji a méně uměle. //@RRT:PinkNoise
 
-Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci náhodných čísel byl použit _32-bitový_ `Xorshift`, který však v ukázce Kód: @C:PinkNoise[] není vypsán.
+Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci náhodných čísel byl použit _32-bitový_ `Xorshift`, který je však ve výpisu @C:PinkNoise[] vynechán.
 #figure(
   ```C
   while (i < scene->sampleCount) {
-    // Implementace algoritmu Xorshift ve 32-bitové verzi
+    // Implementace algoritmu Xorshift ve 32-bitové verzi (zde vynecháno)
     ...
 
     // Generace růžového šumu pomocí Voss-McCartenova algoritmu s 32 iteracemi
@@ -298,8 +312,9 @@ Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci ná
     pinkNoiseBuffer[i] = sum * 0.03125f; // Vypočítání průměrné hodnoty
 
     i++;
-}
-```
+  }
+  ```,
+  caption: [Generace růžového šumu],
 ) <C:PinkNoise>
 
 === Generace nízkofrekvenčního šumu
@@ -312,24 +327,126 @@ Nízkofrekvenční šum je využit při generaci základního zvuku motoru v ot�
 V této fázi jsou paralelně vypočteny vzorky jednotlivých zvukových stop. Konkrétně jde o vzorky základní zvukové stopy motoru a o vzorky zvuku klapání ventilů.
 
 === Základní zvuková stopa
+Základní zvuková stopa odpovídá zvuku spalování v motoru. Vzorky stopy jsou vypočítány pomocí fáze, která již byla vypočítána v předvýpočetní fázi. Zvuková stopa je zachycena ve spektogramu @OBR:spek[].
+
+#figure(
+  image("images/base.png", width: 60%),
+  caption: [Spektogram základní zvukové stopy \[Spek\]],
+) <OBR:spek>
 
 === Zvuk klapání ventilů
+Zvuk klapání ventilů je pro celkový zvuk motoru překvapivě důležitý, zejména v nízkých otáčkách. Pro vypočítání zvuku ventilů je potřeba znát časy, kdy je vačková hřídel v kontaktu s ventily.\
+
+Každý válec má sací a výfukový ventil, každý z nich je otevřen jednu dobu každé dvě otáčky. Frekvenci otevření sacího ventilu lze vypočítat pomocí rovnice (@RV:ventil[]).
+
+$ f_s = ((o t) / 2 dot v ) / 8 $ <RV:ventil>
+$f_s$ je frekvence otevírání sacího ventilu [Hz]\
+$o t$ jsou otáčky motoru [ot $dot$ s#super[-1]]\
+$v$ je počet válců\
+
+Abychom z této frekvence získali zvukovou stopu, využijeme modulace. Nejprve je zapotřebí přeměnit frekvenci na pulzy pomocí rovnice (@RV:pulzy[]).
+
+$ n = 10 dot abs(sin(phi_s + 0,1 dot p)) - 9 $ <RV:pulzy>
+$n$ je momentální hodnota vzorku modulační vlny\
+$phi$ je fáze frekvence otevírání sacího ventilu\
+$p$ je momentální hodnota růžového šumu\
+
+Tuto pulzovou vlnu posuneme o uživatelem zadanou hodnotu `valvetrain_timing_offset`, čímž vytvoříme pulzovou vlnu výfukových ventilů. Tyto vlny sečteme.
+
+Jako nosnou vlnu využijeme pilovou vlnu, ta je generována pomocí kódu ve výpisu @C:SawtoothWave[].
+
+#figure(
+  ```C
+  valvetrainBuffer[i] = 2.0f * (fmod(phaseBuffer[i] * 2.0f, TAU) / TAU) - 1.0f;
+  ```
+) <C:SawtoothWave>
+
+Po modulaci nosné pilové vlny pulzovou vlnou získáme zvukovou stopu, která mimikuje klapání ventilů v motoru. 
+
 
 #pagebreak()
 
 
 == Kombinační fáze
-V této fázi jsou zkombinovány stopy vzorků z minulé fáze na základě požadavků uživatele.
-
-#pagebreak()
-
+V této fázi jsou zkombinovány stopy vzorků z minulé fáze na základě požadavků uživatele (`base_volume` a `valvetrain_volume`). Tato fáze je velice rychlá, jde pouze o násobení vzorků jejich hlasitostí a následné sečtení. V této fázi neprobíhá normalizace, při překročení maximálnní hlasitosti je uživatel je upozorněn.
 
 == _Post-processing_ fáze
+Tato část je velice složitá, a tak i časově náročná. Uživatel ji může přeskočit pomocí přepínače `-p` (_preview_).\
 
-== Zapisovací fáze
+Cílem této fáze je vyplnit vyšší frekvence smysluplnými daty. Toho docílíme tvorbou harmonických frekvencí kombinovaného pole frekvencí.\
 
+=== _Fourierova_ transformace
+Při výpočtu polí byla ztracena informace o frekvenci, potřebujeme ji získat pomocí _Fourierovy transformace_ (viz rovnice @RV:fourier[]). @WIKI:Fourier
+
+$ hat(f)(xi) = integral^infinity_(-infinity) f(x) dot e^(-i 2 pi xi x) dot delta x, quad forall xi in RR $ <RV:fourier>
+
+K jejímu výpočtu byl využit _Cooley-Tukeyovský_ urychlený algoritmus, který využívá komplexních čísel a rekurze. Má adaptace tohoto algoritmu je ve výpisu @C:fourier[]. @WU:FFT
+
+#figure(
+  ```C
+  void fastFourierTransform(complex float *input, uint64_t n, complex float *temp) {
+    if (n > 1) {
+      uint64_t k, m;
+      complex float w = 0.0f + (0.0f * I);
+      complex float z = 0.0f + (0.0f * I);
+      complex float *even = temp; 
+      complex float *odd = temp + (n / 2);
+
+      for (k = 0; k < (n / 2); k++) {
+        even[k] = input[2 * k];
+        odd[k] = input[2 * k + 1];
+      }
+
+      // Rekurze
+      fastFourierTransform(even, n / 2, input);
+      fastFourierTransform(odd, n / 2, input);
+
+      // Výpočet FFT
+      for (m = 0; m < (n / 2); m++) {
+        w = cos(TAU * m / (float) n) - (sin(TAU * m / (float) n) * I);
+        z = w * odd[m];
+        input[m] = even[m] + z;
+        input[m + (n / 2)] = even[m] - z;
+      }
+    }
+  }
+  ```,
+  caption: [Adaptace algoritmu `FFT` z @WU:FFT]
+) <C:fourier>
+
+Podobně funguje i inverzní funke `inverseFastFourierTransform`.\
+
+Takto převádět zvukovou stopu do frekvenční dimenze lze pouze v případě, že frekvence zůstane konstantní. 
 
 #pagebreak()
+
+=== Tónový posun
+Pro zvukové stopy s proměnlivou frekvencí je třeba využít složitější algoritmus: pole rozdělíme na malá okna, která se vzájemně překrývají. Každé okno trvá pouze několik milisekund, cílem je získat okamžité frekvence v daném čase. Okna převedeme do frekvenční domény pomocí _FFT_ algoritmu (jako velikost oken je proto vhodné zvolit mocninu dvou). Tato okna složíme zpět do zvukové stopy, přičemž roztáhneme mezery mezi nimi (dle faktoru tónového posunu).
+
+=== Hanningovo okno
+Abychom zamezili spektrálnímu přelivu, je využito _Hanningovo okno_.
+
+#pagebreak()
+
+
+== Zapisovací fáze
+Data z předchozí fáze se zapíší do výsledného souboru `WAV`. Předtím se však vzorky musí převést do správného datového formátu, k tomu využijeme funkci `convert`, který využívá ukazatel typu `void ` pro generičnost.
+
+#figure(
+  ```C
+  uint8_t *buffer = (uint8_t *) voidBuffer;
+
+  while (i < sampleCount) {
+    buffer[i] = (floatBuffer[i] + 1.0f) * 128;
+    i++;
+  }
+  ```,
+  caption: [Převod pole typu `float` na pole typu `uint8_t`]
+) <C:FloatTo8>
+
+#pagebreak()
+
+
 = Závěr
 
 
