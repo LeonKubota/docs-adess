@@ -1,6 +1,3 @@
-//#import "@preview/wordometer:0.1.4": word-count, total-words
-//#show: word-count
-
 // Making the footer for the title page
 #set page(footer: context {
   let page = counter(page).get().first()
@@ -36,6 +33,58 @@ header: context {
 
 #set math.equation(numbering: "(1)")
 
+/*
+#let code(
+  caption: [], 
+  source: [],
+  fig
+  ) = {
+  let styled_figure = {
+    figure(caption: caption, fig) //#label
+  }
+
+  return figure(outlined: false, styled_figure)
+}
+*/
+
+#let code(
+  content,
+  caption: [],
+  //fig
+) = {
+  set par(justify: false)
+  figure(
+    block(
+      fill: rgb("#fcfcfc"),
+      radius: 4pt,
+      stroke: .5pt + rgb("#808080"),
+      inset: (x: 6pt, y: 8pt),
+      width: 100%,
+      clip: false,
+      [#align(left)[#content]]
+    ),
+    caption: [#caption],
+    supplement: "Výpis",
+    kind: "code"
+  )
+}
+}
+
+/*
+#let code(body, caption) = {
+  figure(
+    v(-0.1cm),
+    line(stroke: (dash: "dashed", paint: rgb("#808080"), thickness: 0.75pt), length: 100%),
+    v(-0.25cm),
+    body,
+    caption,
+    v(-0.25cm),
+    line(stroke: (dash: "dashed", paint: rgb("#808080"), thickness: 0.75pt), length: 100%),
+    v(-0.1cm),
+  )
+}
+*/
+
 // To have nice figures
 #show figure.caption.where(kind: image): it => [
   Obr.
@@ -59,7 +108,9 @@ header: context {
   syntaxes: "syntax.sublime-syntax",
   theme: "theme.tmTheme"
 )
-#show raw: set text(font: "PT Mono")
+#show raw: set text(font: "FreeMono")
+#show raw.where(block: true): set text(1em / 0.9) // Set ```this``` to some size
+#show raw.where(block: false): set text(1em / 0.8) // Set `this` to normal size
 
 
 #pagebreak()
@@ -246,16 +297,18 @@ $ phi_n = sum^(n-1)_(i = 0) tau dot f[i] dot Delta t $ <RV:faze>
 
 V programu vypočítáme rovnici (@RV:faze[]) pomocí kódu uvedeného ve výpisu @C:Phase[].
 #figure(
-  ```c
-  double phase = 0; // Musí být double, jelikož float neposkytuje dostatečnou přesnost
+  code(
+    ```c
+    double phase = 0; // Musí být double, jelikož float neposkytuje dostatečnou přesnost
 
-  while (i < scene->sampleCount) {
-    phase += TAU * frequencyBuffer[i] * timeStep;
-    phaseBuffer[i] = phase;
-    i++;
-  }
-  ```,
-  caption: [Výpočet fáze],
+    while (i < scene->sampleCount) {
+      phase += TAU * frequencyBuffer[i] * timeStep;
+      phaseBuffer[i] = phase;
+      i++;
+    }
+    ```,
+    caption: [Výpočet fáze],
+  )
 ) <C:Phase>
 
 Násobitel nízkofrekvenčního šumu vypočítáme pomocí rovnice (@RV:nasobitelSumu[]).
@@ -270,7 +323,9 @@ $p$ je pokles (vzdálenost od volnoběhu ve které je šum nulový, v otáčkác
 Hnědý šum je šum, který je tvořen Brownovým pohybem, lze získat integrováním bílého šumu. V aplikaci je využit jako obecný zdroj náhodnosti ve většině funkcí, viz výpis @C:BrownNoise[]. //@WIKI:BrownianNoise\
 
 Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomuto algoritmu jsou náhodná čísla generována velice rychle a zároveň opakovatelně (dle počáteční hodnoty proměnné `state`). //@WIKI:Xorshift
+
 #figure(
+code(
   ```c
   while (i < scene->sampleCount) {
     // Implementace algoritmu Xorshift ve 32-bitové verzi
@@ -289,7 +344,7 @@ Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomut
   }
   ```,
   caption: [Generace hnědého šumu],
-) <C:BrownNoise>
+)) <C:BrownNoise>
 
 Hodnoty jsou dále stabilizovány a vyhlazeny pomocí zprůměrování vzorků dle Gaussova rozdělení. Díky tomuto kroku působí šum přirozeněji. 
 
@@ -298,6 +353,7 @@ Tento šum je využit při generaci zvuku klapání ventilů, je velmi podobný 
 
 Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci náhodných čísel byl použit _32-bitový_ `Xorshift`, který je však ve výpisu @C:PinkNoise[] vynechán.
 #figure(
+  code(
   ```C
   while (i < scene->sampleCount) {
     // Implementace algoritmu Xorshift ve 32-bitové verzi (zde vynecháno)
@@ -315,6 +371,7 @@ Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci ná
   }
   ```,
   caption: [Generace růžového šumu],
+)
 ) <C:PinkNoise>
 
 === Generace nízkofrekvenčního šumu
@@ -331,11 +388,11 @@ Základní zvuková stopa odpovídá zvuku spalování v motoru. Vzorky stopy js
 
 #figure(
   image("images/base.png", width: 60%),
-  caption: [Spektogram základní zvukové stopy \[Spek\]],
+  caption: [Spektogram základní zvukové stopy \[`Spek`\]],
 ) <OBR:spek>
 
 === Zvuk klapání ventilů
-Zvuk klapání ventilů je pro celkový zvuk motoru překvapivě důležitý, zejména v nízkých otáčkách. Pro vypočítání zvuku ventilů je potřeba znát časy, kdy je vačková hřídel v kontaktu s ventily.\
+Zvuk klapání ventilů je pro celkový zvuk motoru překvapivě důležitý, zejména při nízkých otáčkách. Pro výpočet zvuku ventilů je potřeba znát časy, kdy je vačková hřídel v kontaktu s ventily.\
 
 Každý válec má sací a výfukový ventil, každý z nich je otevřen jednu dobu každé dvě otáčky. Frekvenci otevření sacího ventilu lze vypočítat pomocí rovnice (@RV:ventil[]).
 
@@ -351,14 +408,14 @@ $n$ je momentální hodnota vzorku modulační vlny\
 $phi$ je fáze frekvence otevírání sacího ventilu\
 $p$ je momentální hodnota růžového šumu\
 
-Tuto pulzovou vlnu posuneme o uživatelem zadanou hodnotu `valvetrain_timing_offset`, čímž vytvoříme pulzovou vlnu výfukových ventilů. Tyto vlny sečteme.
-
-Jako nosnou vlnu využijeme pilovou vlnu, ta je generována pomocí kódu ve výpisu @C:SawtoothWave[].
+Tuto pulzovou vlnu posuneme o uživatelem zadanou hodnotu `valvetrain_timing_offset`, čímž vytvoříme pulzovou vlnu výfukových ventilů. Tyto vlny sečteme. Jako nosnou vlnu využijeme pilovou vlnu, ta je generována pomocí kódu ve výpisu @C:SawtoothWave[].
 
 #figure(
+  code(
   ```C
   valvetrainBuffer[i] = 2.0f * (fmod(phaseBuffer[i] * 2.0f, TAU) / TAU) - 1.0f;
   ```
+)
 ) <C:SawtoothWave>
 
 Po modulaci nosné pilové vlny pulzovou vlnou získáme zvukovou stopu, která mimikuje klapání ventilů v motoru. 
@@ -383,6 +440,7 @@ $ hat(f)(xi) = integral^infinity_(-infinity) f(x) dot e^(-i 2 pi xi x) dot delta
 K jejímu výpočtu byl využit _Cooley-Tukeyovský_ urychlený algoritmus, který využívá komplexních čísel a rekurze. Má adaptace tohoto algoritmu je ve výpisu @C:fourier[]. @WU:FFT
 
 #figure(
+  code(
   ```C
   void fastFourierTransform(complex float *input, uint64_t n, complex float *temp) {
     if (n > 1) {
@@ -412,6 +470,7 @@ K jejímu výpočtu byl využit _Cooley-Tukeyovský_ urychlený algoritmus, kter
   }
   ```,
   caption: [Adaptace algoritmu `FFT` z @WU:FFT]
+  )
 ) <C:fourier>
 
 Podobně funguje i inverzní funke `inverseFastFourierTransform`.\
@@ -430,9 +489,10 @@ Abychom zamezili spektrálnímu přelivu, je využito _Hanningovo okno_.
 
 
 == Zapisovací fáze
-Data z předchozí fáze se zapíší do výsledného souboru `WAV`. Předtím se však vzorky musí převést do správného datového formátu, k tomu využijeme funkci `convert`, který využívá ukazatel typu `void ` pro generičnost.
+Data z předchozí fáze se zapíší do výsledného souboru `WAV`. Předtím se však vzorky musí převést do správného datového formátu, k tomu využijeme funkci `convert`, který využívá ukazatel typu `void ` pro generičnost. Převod z typu `float` na typ `uint8_t` je ve výpisu @C:FloatTo8[]. 
 
 #figure(
+  code(
   ```C
   uint8_t *buffer = (uint8_t *) voidBuffer;
 
@@ -442,13 +502,13 @@ Data z předchozí fáze se zapíší do výsledného souboru `WAV`. Předtím s
   }
   ```,
   caption: [Převod pole typu `float` na pole typu `uint8_t`]
+)
 ) <C:FloatTo8>
 
 #pagebreak()
 
 
 = Závěr
-
 
 
 #pagebreak()
