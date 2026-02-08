@@ -721,7 +721,7 @@ Data jsou do binárního souboru `WAV` zapsány pomocí funkce `fwrite`.
 
 
 = Závěr
-Syntetická tvorba zvuku je velice obsáhlé a komplexní téma.
+Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtížné synteticky vytvořit zvuk, který nezní jako synteticky vytvořený zvuk.
 
 == Možné rozšíření
 
