@@ -13,14 +13,22 @@
     align(center)[#page]
   }
 },
-header: context {
-  if counter(page).get().first() == 1 {
-    text(18pt)[#align(center)[*GYMNÁZIUM, PRAHA 6, ARABSKÁ 14*]]
-  }
-},
 )
 
 // First page
+#v(-1.5cm)
+#align(center)[
+  #table(
+    stroke: none,
+    columns: (2cm, 10cm),
+    column-gutter: 15pt,
+    align: horizon,
+    image("images/GyarabLogo.png", width: 100%),
+    align(left)[*Gymnázium, Praha 6, Arabská 14 \
+    předmět Programování, vyučující Ing. Daniel Kahoun*],
+  )
+]
+
 #v(5.5cm)
 #align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
 //#align(center)[#image("images/GyarabLogo.png", width: 20%)]
@@ -33,20 +41,6 @@ header: context {
 
 #set math.equation(numbering: "(1)")
 #set math.cases(gap: 0.75em)
-
-/*
-#let code(
-caption: [], 
-source: [],
-fig
-) = {
-let styled_figure = {
-figure(caption: caption, fig) //#label
-}
-
-return figure(outlined: false, styled_figure)
-}
-*/
 
 #let code(
   content,
@@ -69,21 +63,6 @@ return figure(outlined: false, styled_figure)
     kind: "code"
   )
 }
-
-/*
-#let code(body, caption) = {
-figure(
-v(-0.1cm),
-line(stroke: (dash: "dashed", paint: rgb("#808080"), thickness: 0.75pt), length: 100%),
-v(-0.25cm),
-body,
-caption,
-v(-0.25cm),
-line(stroke: (dash: "dashed", paint: rgb("#808080"), thickness: 0.75pt), length: 100%),
-v(-0.1cm),
-)
-}
-*/
 
 // To have nice figures
 #show figure.caption.where(kind: image): it => [
@@ -720,16 +699,17 @@ Data jsou do binárního souboru `WAV` zapsány pomocí funkce `fwrite`.
 #pagebreak()
 
 
-= Závěr
-Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtížné synteticky vytvořit zvuk, který nezní jako synteticky vytvořený zvuk.
-
 == Možné rozšíření
 
-== Přínos
+= Závěr
+Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtížné synteticky vytvořit zvuk, který nezní jako synteticky vytvořený zvuk.
 
 
 #pagebreak()
 
+
 = Seznam použitých zdrojů
 #set bibliography(title: none)
 #bibliography(style: "iso690-numeric-brackets-cs.csl", "zdroje.bib")
+
+= Přílohy
