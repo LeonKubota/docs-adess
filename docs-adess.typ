@@ -174,8 +174,6 @@ _Adess_ je aplikace přístupná v příkazové řádce, která procedurálně g
 #heading(outlined: false)[Abstract]
 Adess is an application that runs in the terminal, it procedurally generates the sound of combustion engines for use in animation and film production. The generation is fully customizable by the user through "adess" configuration files in a proprietary DST "language" (data storage thing). These files contain important values about the format and characteristics of the desired sound and keyframes, that determine the sounds change throughout time. The values from these files are loaded into memory and subsequently used for procedural parallel synthetization of engine sounds. The output of this generation is a buffer of samples, which are exported into a _WAV_ file.
 
-#heading(outlined: false)[Zusammenfassung]
-
 #v(1fr)
 
 #heading(outlined: false)[Čestné prohlášení]
@@ -224,9 +222,9 @@ Pro zkompilování jsem využil _CMake_, který podporuje mnoho _compilerů_. Os
 
 Již zmíněné technologie jsou vše, co je nutné pro zkompilování a spuštění projektu (uvažuji, že standardní knihovny uživatel má). Při psaní zdrojového kódu jsem však využil několika dalších nástrojů:\
 
-- _Sonic Visualiser_ -- _open-source_ nástroj pro analýzu zvuku, umožňuje spektrální a vlnovou analýzu. @CDM:SonicVisualiser
-- _Spek_ -- jednodušší, zato rychlejší a uživatelsky přívětivější nástroj pro analýzu zvuku. @AK:Spek
-- _Valgrind_ -- nástroj běžící v příkazové řádce pro analýzu paměti programu za běhu, je velice užitečný pro zamezení únikům paměti
+- `Sonic Visualiser` -- _open-source_ nástroj pro analýzu zvuku, umožňuje spektrální a vlnovou analýzu. @CDM:SonicVisualiser
+- `Spek` -- jednodušší, zato rychlejší a uživatelsky přívětivější nástroj pro analýzu zvuku. @AK:Spek
+- `Valgrind` -- nástroj běžící v příkazové řádce pro analýzu paměti programu za běhu, je velice užitečný pro zamezení únikům paměti
 
 
 = Zvuk
@@ -699,11 +697,25 @@ Data jsou do binárního souboru `WAV` zapsány pomocí funkce `fwrite`.
 #pagebreak()
 
 
-== Možné rozšíření
+= Možné rozšíření
+Tento projekt nabízí mnoho možností v rámci rozšíření. Za nejdůležitější z nich považuji podporu operačního systému _Windows_, která je v současnosti možná pouze s použitím _WSL_. Dalším možným vylepšením je usnadnění použití _Adess_ dalšími aplikacemi, které mohou uživateli nabídnout snažší ovládání pomocí grafického uživatelského rozhraní. _Adess_ už je možno takto použít, můj bratr vytvořil program, který dokáže ovládat _Adess_ pomocí plynu a brzdu, což může být pro uživatele výrazně snažší. Pokud bych se rozhodl pro tento přístup, pravděpodobně bych zvolil tvorbu knihovny namísto vlastní aplikace a soustředil bych se na samotnou generaci kódu (nikoliv _parsování_ a práci se soubory).\
+
+Druhou cestou, kterou by mohl projekt dále postupovat, je využití simulace. Simulace se pro tvorbu zvuku motorů již využívají, (například _engine-sim_ od Angeho Yaghe), tyto simulátory často pracují v reálném čase. Jelikož aplikace _Adess_ nevyžaduje práci v reálném čase, bylo by možné využít _CFD_ simulace. Takto vytvořený zvuk by byl násobně kvalitnější než současný stav _Adess_. @GH:EngineSim
 
 = Závěr
-Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtížné synteticky vytvořit zvuk, který nezní jako synteticky vytvořený zvuk.
+Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtížné synteticky vytvořit zvuk, který nezní jako byl vytvořen synteticky. Přes značnou komplexitu tohoto témata jsem byl schopen vytvořit produkt, který ukazuje, že v tomto přístupu pro generaci zvuku je potenciál.\
 
+Díky tomuto projektu jsem měl možnost zkombinovat několik různých disciplín: fyziku (zvuk), inženýrství (pro znalost spalovacích motorů) a samozřejmě programování. Pro dosažení vysoké rychlosti programu jsem se naučil základy jazyka `C` a paralelního programování.\
+
+Příklad hotové zvukové stopy je na Obr. @OBR:final[], příklady zvukových stop jsou v kapitole @K:files[].
+
+Tento projekt vedl k značnému rozvinutí mých znalostí ohledně programování a prokázal, že syntetická generace zvuku motorů je možná.
+
+
+#figure(
+  image("images/final.png", width: 100%),
+  caption: [Hotová zvuková stopa \[`Spek`\]],
+) <OBR:final>
 
 #pagebreak()
 
@@ -712,4 +724,4 @@ Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtí
 #set bibliography(title: none)
 #bibliography(style: "iso690-numeric-brackets-cs.csl", "zdroje.bib")
 
-= Přílohy
+= Přílohy <K:files>
