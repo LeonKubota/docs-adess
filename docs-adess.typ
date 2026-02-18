@@ -1,3 +1,6 @@
+#import "@preview/wordometer:0.1.5": word-count, total-words
+#show: word-count.with(exclude: (heading, raw, strike))
+
 // Making the footer for the title page
 #set page(footer: context {
   let page = counter(page).get().first()
@@ -29,11 +32,14 @@
   )
 ]
 
-#v(5.5cm)
-#align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
-//#align(center)[#image("images/GyarabLogo.png", width: 20%)]
+#v(0.5fr)
 #text(18pt)[#align(center)[*Adess -- umělecky dirigovaný syntetizér zvuku motorů*]]
-//#text(18pt)[#align(center)[#highlight[*#total-words / 6000*]]]
+#v(-0.25cm)
+#align(center)[ročníkový projekt]
+#align(center)[#highlight[*_Slova: #total-words / 2000_*]]
+#v(0.25cm)
+#align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
+#v(0.5fr)
 
 #set text(
   lang: "cs"
@@ -50,9 +56,8 @@
   set par(justify: false)
   figure(
     block(
-      fill: rgb("#fcfcfc"),
       radius: 4pt,
-      stroke: .5pt + rgb("#808080"),
+      stroke: 0.05em, //+ rgb("#808080"),
       inset: (x: 6pt, y: 8pt),
       width: 100%,
       clip: false,
@@ -214,34 +219,55 @@ Druhým postupem je zvukovou stopu generovat, toho lze docílit simulací tlakov
 
 #pagebreak()
 
-
+// Beautiful syntax (I hate this)
+#page(footer: context [
+  #line(stroke: 0.05em, length: 100%)
+  \*U 24 _bitových_ vzorků lze využít i datového typu `int32_t` s nulovým vycpáváním, rozhodl jsem se však v zájmu nižší velikosti výsledného souboru pro komplexnější řešení.]
+)[
 = Použité technologie
-Celý projekt je napsán v programovacím jazyce _C_ (konkrétně _C99_) pro jeho výpočetní účinnost a možnost bližšího kontaktu s _hardwarem_. Tento jazyk jsem zvolil také kvůli svému zájmu o studium letectví a kosmonautiky, kde se hojně využívá pro programování _embedded_ systémů.\
+Celý projekt je napsán v programovacím jazyce `C` (konkrétně `C99`) pro jeho výpočetní účinnost a možnost bližšího kontaktu s _hardwarem_. Tento jazyk jsem zvolil také kvůli svému zájmu o studium letectví a kosmonautiky, kde se hojně využívá.\
 
-Pro zkompilování jsem využil _CMake_, který podporuje mnoho _compilerů_. Osobně jsem zvolil běžně používaný _compiler_ _GCC_ (_GNU Compiler Collection_). @CMAKE:CMake @GCC:GNUCompilerCollection
+Pro zkompilování jsem využil `CMake` a běžně používaný _compiler_ `GCC` (_GNU Compiler Collection_). Jedinou nestandardní knihovnou je knihovna `pthreads` (využita pro paralelní procesování). @CMAKE:CMake @GCC:GNUCompilerCollection @POSIX:pthreads
 
-Již zmíněné technologie jsou vše, co je nutné pro zkompilování a spuštění projektu (uvažuji, že standardní knihovny uživatel má). Při psaní zdrojového kódu jsem však využil několika dalších nástrojů:\
+Při psaní zdrojového kódu jsem využil několika nástrojů:\
 
-- `Sonic Visualiser` -- _open-source_ nástroj pro analýzu zvuku, umožňuje spektrální a vlnovou analýzu. @CDM:SonicVisualiser
+- `Sonic Visualiser` -- nástroj pro analýzu zvuku, umožňuje spektrální i vlnovou analýzu. @CDM:SonicVisualiser
 - `Spek` -- jednodušší, zato rychlejší a uživatelsky přívětivější nástroj pro analýzu zvuku. @AK:Spek
-- `Valgrind` -- nástroj běžící v příkazové řádce pro analýzu paměti programu za běhu, je velice užitečný pro zamezení únikům paměti
+- `Valgrind` -- nástroj běžící v příkazové řádce pro analýzu paměti programu za běhu, je velice užitečný pro zamezení únikům paměti. @VG:Valgrind
+// TODO - `neovim` --
 
 
 = Zvuk
-Abychom dokázaji zvuk tvořit, je potřeba mu alespoň povrchově porozumět. Jako zvuk označujeme vlnění částic vzduchu. Čím rychleji tyto částice kmitají (jejich frekvence), tím vyšší tón slyšíme. Čím větší je amplituda vlnění, tím hlasitější zvuk slyšíme. Jako lidé slyšíme zvuky o frekvencích od $20$ až $20000$ Hz a hlasitosti alespoň $0$ dB. @DOSITS:Loudness
+Abychom dokázaji zvuk tvořit, je potřeba mu alespoň povrchově porozumět. Jako zvuk označujeme vlnění částic vzduchu. Čím rychleji tyto částice kmitají (jejich frekvence), tím vyšší tón slyšíme; čím větší je amplituda vlnění, tím hlasitější zvuk slyšíme. Jako lidé slyšíme zvuky o frekvencích od $20$ až $20000$ Hz a hlasitosti alespoň $0$ dB. @DOSITS:Loudness
 
 == Digitální zvuk 
-Zvuk je ukládán jako pole vzorků, které určují, v jaké poloze se má nacházet oscilátor v reproduktoru. V tomto projektu je využit formát _WAV_.\
+Digitální zvuk je ukládán jako pole vzorků, které určují, v jaké poloze se má nacházet oscilátor v reproduktoru.\
 
-V jednotlivých vzorcích je tedy uložena amplituda v jednotlivém čase. Datový typ vzorku se liší podle rozlišení vzorků (anglicky _bit depth_), běžně nabývá hodnot 8, 16, 24 a 32. Má aplikace dokáže exportovat v těchto _bit ratech_ s využitím datových typů ```c uint8_t``` pro _8-bit_ audio, ```c int16_t``` pro _16-bit_ audio a ```c float``` pro _32-bit_ audio. Pro _24-bit_ audio jsem zvolil zabalení do tří ```c uint8_t``` místo jednoho ```c int32_t``` s nulovým vycpáváním.
+V jednotlivých vzorcích je uložena amplituda v určitém čase. Datový typ vzorku se liší podle rozlišení vzorků (anglicky _bit depth_), běžně nabývá hodnot 8, 16, 24 a 32. V Tab. @TAB:Typy[] jsou blíže popsány datové typy vzorků v mé aplikaci.
 
-_Sample rate_ označuje počet vzorků zaznamenaných na každou sekundu. Obvykle se používá hodnota $44100$, jelikož s ní dokážeme zaznamenat celé spektrum lidsky slyšitelného zvuku. Při příliš nízkých _sample ratech_ dochází k _aliasování_, což je nežádoucí artefakt plynoucí z příliš vysoké frekvence. Tato konkrétní frekvence, při níž dochází k _aliasování_, se nazývá _Nyquistova_. Je rovna polovině _sample ratu_. V mé aplikaci si uživatel může zvolit libovolný _sample rate_.
+#figure(
+  table(
+    stroke: 0.05em,
+    columns: (4cm, 4cm),
+    table.header(
+      [*rozlišení vzorku*], [*použitý datový typ*]
+    ),
+    [8], [`uint8_t`],
+    [16], [`int16_t`],
+    [24], [3 $dot$ `uint8_t`\*],
+    [32], [`float`],
+  ),
+  caption: [Datové typy využité pro ukládání vzorků],
+) <TAB:Typy>
+
+Vzorkovací frekvence (anglicky _sample rate_) označuje počet vzorků zaznamenaných každou sekundu. Obvykle se používá hodnota $44,1$ kHz, jelikož je dostatečně vysoká pro zaznamenání celého spektra slyšitelného zvuku. Pokud se frekvence, kterou se snažíme zaznamenat, rovná polovině vzorkovací frekvence (takzvaná _Nyquistova_ frekvence), dochází ke ztrátě informací.
+]
 
 
 #pagebreak()
 
 = Ovládání aplikace _Adess_
-Aplikace _Adess_ se ovládá skrze příkazy v příkazové řádce a nastavovací soubory. V Tab. @TAB:commands[] jsou popsány příkazy dostupné v aplikaci _Adess_.
+Aplikace se ovládá skrze příkazy psané v příkazové řádce a nastavovací soubory. V Tab. @TAB:commands[] jsou popsány příkazy dostupné v aplikaci _Adess_.
 
 #figure(
   table(
@@ -249,48 +275,78 @@ Aplikace _Adess_ se ovládá skrze příkazy v příkazové řádce a nastavovac
     columns: (3fr, 2fr, 5fr),
     align: left,
     table.header(
-      [*Příkaz*], [*Přepínače*], [*Popis*]
+      [*příkaz*], [*přepínače*], [*popis*]
     ),
 
     [`adess help`], [bez přepínačů], [Zobrazí uživateli možnosti aplikace _Adess_.],
     [`adess make_project`], [`-h`, `-n`, `-d`, `-e`], [Vytvoří adresář projektu a naplní jej soubory.],
     [`adess make_scene`], [`-h`, `-n`, `-d`, `-e`], [Vytvoří soubor scény.],
     [`adess make_engine`], [`-h`, `-n`, `-d`, `-e`], [Vytvoří soubor motoru.],
-    [`adess render`], [`-n`, `-a`, `-p`], [Vypočítá zvuk a uloží zvukovou stopu.],
+    [`adess render`], [`-h`, `-n`, `-p`], [Vypočítá zvuk a uloží zvukovou stopu.],
     [`adess guide`], [bez přepínačů], [Zobrazí uživateli podrobnější dokumentaci.],
   ),
   caption: [Přehled příkazů aplikace _Adess_],
 ) <TAB:commands>
 
 V Tab. @TAB:options[] jsou popsány přepínače.
+
 #figure(
   table(
     stroke: 0.05em,
     columns: (1fr, 1.25fr, 5fr),
     align: left,
     table.header(
-      [*Přepínač*], [*Název*], [*Popis*]
+      [*přepínač*], [*název*], [*popis*]
     ),
 
     [`-h`], [_help_], [Zobrazí možnosti příkazu (alternativa `adess help <příkaz>`).],
     [`-n`], [_name_], [Nastaví jméno (projektu, scény, motoru či exportovaného souboru).],
     [`-d`], [_directory_], [Nastaví adresář pro vytvoření (projektu, scény či motoru)],
     [`-e`], [_empty_], [Vytvoří prázdný projekt, scénu či motor (bez továrních hodnot).],
-    [`-a`], [_all_], [Vytvoří zvukovou stopu všech dostupných scén.],
     [`-p`], [_preview_], [Přeskočí _post-processing_ fázi],
   ),
   caption: [Přehled přepínačů aplikace _Adess_],
 ) <TAB:options>
 
-= Syntax souborů _Adess_
-Syntax souborů _Adess_ je velice jednoduchý, jde o pouze o 
+== Parsování příkazů
+
 
 #pagebreak()
 
 
-= Ovládací soubory
+== Nastavovací soubory
+Nastavovací soubory aplikace jsou rozděleny do tří kategorií: projektový soubor obsahuje parametry výsledného souboru a informace o adresách jiných souborů; soubor scény obsahuje informace o scénách a soubor motoru obsahuje parametry motoru. Konkrétní hodnoty jsou popsány v kapitole @KAP:NastavovaciSoubory[], nejprve je však popsán syntax těchto souborů.
 
-Ovládací soubory aplikace _Adess_ jsou rozděleny do tří kategorií: projektový soubor obsahuje parametry výsledného souboru a informace o adresách dalších souborů, je popsán v Tab. @TAB:project[].
+=== Syntax nastavovacích souborů
+Syntax nastavovacích souborů je velice jednoduchý. Jsou podporovány 3 datové typy: celá čísla (`integer`), desetinná čísla (`float`) a řetězce (`string`). Čísla jsou omezeny na nezáporná, ve výpisu @C:syntax[] je ukázka nastavovacího souboru (_Adess_ také podporuje komentáře).
+
+#figure(
+  code(
+    ```c
+    sample_rate = 44100 // Celé číslo, nastavuje vzorkovací frekvenci
+    base_volume = 0.05f // Desetinné číslo, nastavuje hlasitost základní stopy 
+    engine_path = "engines" // Řetězec, nastavuje cestu k souborům motorů
+    ```,
+    caption: [Ukázka nastavovacího souboru]
+  ),
+) <C:syntax>
+
+Pro nastavení klíčových snímků je využit zápis ve výpisu @C:keyframe[].
+#figure(
+  code(
+    ```c
+keyframes = {
+  // Hodnoty: čas (v sekundách), otáčky (v ot/min) a zátěž (hodnoty 0 až 1)
+  2.5f, 900, 0.0f;
+  3.5f, 2500, 0.7f;
+}
+    ```,
+    caption: [Ukázka animace pomocí klíčových snímků]
+  ),
+) <C:keyframe>
+
+=== Proměnné nastavovacích souborů <KAP:NastavovaciSoubory>
+Proměnné projektového souboru jsou popsány v Tab. @TAB:project[].
 
 #figure(
   table(
@@ -328,6 +384,10 @@ Soubory scén obsahují informaci o scéně. Možné hodnoty jsou zapsány v Tab
   ),
   caption: [Hodnoty v souboru scén]
 ) <TAB:scene>
+
+
+#pagebreak()
+
 
 Nejvíce parametrů obsahuje soubor motoru, jsou popsány v Tab. @TAB:engine[].
 
@@ -367,14 +427,17 @@ Nejvíce parametrů obsahuje soubor motoru, jsou popsány v Tab. @TAB:engine[].
 
 Tyto soubory jsou při zavolání příkazu `adess render` načteny do paměti a zpracovány, výsledný soubor bude uložen do adresáře určeného hodnotou `output_path` v projektovém souboru.
 
+=== Parsování nastavovacích souborů <KAP:Parse>
+
 
 #pagebreak()
+
 
 = Postup _renderování_ zvuku
 Uživatel pomocí příkazu `adess render` se jménem scény jako argument spustí několikafázový proces _renderování_. Ten je podrobně popsán v následujících podkapitolách.
 
 == Čtení vstupních dat
-Nejprve se otevře soubor projektu a jeho data se po kontrole syntaxe parsují do struktury ```c struct Project```. Poté se toto opakuje se scénou a nakonec se souborem motoru. 
+Nejprve se pomocí procesu popsaného v kapitole @KAP:Parse[] naplní struktury `Project`, `Scene` a `Engine`.
 
 == Předvýpočetní fáze
 V této fázi se předvypočítají důležitá pole pro následující fáze. Tyto výpočty probíhají paralelně.
@@ -392,14 +455,13 @@ $f$ je frekvence [Hz]\
 $n$ je inverzní počet pracovních dob za sekundu (2 pro čtyřdobé motory a 1 pro dvoudobé)\
 $v$ je počet válců
 
-Fázi vypočítáme pomocí rovnice (@RV:faze[]).
+Fázi vypočítáme pomocí rovnice (@RV:faze[]), která je se vypočítá pomocí kódu ve výpisu @C:Phase[].
 $ phi_n = sum^(n-1)_(i = 0) tau dot f[i] dot Delta t $ <RV:faze>
 
-V programu vypočítáme rovnici (@RV:faze[]) pomocí kódu uvedeného ve výpisu @C:Phase[].
 #figure(
   code(
     ```c
-    double phase = 0; // Musí být double, jelikož float neposkytuje dostatečnou přesnost
+    double phase = 0; // Musí být double, float neposkytuje dostatečnou přesnost
 
     while (i < scene->sampleCount) {
       phase += TAU * frequencyBuffer[i] * timeStep;
@@ -420,9 +482,9 @@ $o t$ a $o t_v$ jsou okamžité otáčky a otáčky ve volnoběhu\
 $p$ je pokles (vzdálenost od volnoběhu ve které je šum nulový, v otáčkách)
 
 === Generace stabilního hnědého šumu
-Hnědý šum je šum, který je tvořen Brownovým pohybem, lze získat integrováním bílého šumu. V aplikaci je využit jako obecný zdroj náhodnosti ve většině funkcí, viz výpis @C:BrownNoise[]. @WIKI:BrownianNoise\
+Hnědý šum je tvořen Brownovým pohybem, lze získat integrováním bílého šumu. V aplikaci je využit jako obecný zdroj náhodnosti ve většině funkcí, jeho generace je ve výpisu @C:BrownNoise[]. @WIKI:BrownianNoise\
 
-Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomuto algoritmu jsou náhodná čísla generována velice rychle a zároveň opakovatelně (dle počáteční hodnoty proměnné `state`). @WIKI:Xorshift
+Pro generaci náhodných čísel je využit 32 _bitový_ `Xorshift`, díky tomuto algoritmu jsou náhodná čísla generována velice rychle a zároveň opakovatelně (dle počáteční hodnoty proměnné `state`). @WIKI:Xorshift
 
 #figure(
   code(
@@ -431,11 +493,11 @@ Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomut
       // Implementace algoritmu Xorshift ve 32-bitové verzi
       *state ^= *state << 13;
       *state ^= *state >> 17;
-      *state ^= *state << 5;
+      *state ^= *state <<  5;
 
-      // Přepočítání na hodnoty -1.0 až 1.0
+      // Omezení na hodnoty -1.0 až 1.0
       lastBrown += ((*state / (double) UINT32_MAX) * 2.0f - 1.0f) * 0.02f;
-      if (lastBrown > 1.0f) lastBrown = 1.0f;
+      if (lastBrown >  1.0f) lastBrown =  1.0f;
       if (lastBrown < -1.0f) lastBrown = -1.0f;
 
       stableBrownNoiseBuffer[i] = lastBrown;
@@ -447,26 +509,25 @@ Pro generaci náhodných čísel je využit _32-bitový_ `Xorshift`, díky tomut
   )
 ) <C:BrownNoise>
 
-Hodnoty jsou dále stabilizovány a vyhlazeny pomocí zprůměrování vzorků dle Gaussova rozdělení. Díky tomuto kroku působí šum přirozeněji. 
+Hodnoty jsou dále stabilizovány a vyhlazeny pomocí vážení vzorků dle Gaussova rozdělení.
 
 === Generace růžového šumu
-Tento šum je využit při generaci zvuku klapání ventilů, je velmi podobný bílému šumu, působí však přirozeněji a méně uměle. //@RRT:PinkNoise
+Tento šum je využit při generaci zvuku klapání ventilů, je velmi podobný bílému šumu, působí však přirozeněji a méně uměle. @RRT:PinkNoise
 
-Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci náhodných čísel byl použit _32-bitový_ `Xorshift`, který je však ve výpisu @C:PinkNoise[] vynechán.
+Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_ algoritmus, opět s použitím 32 bitového _bitového_ `Xorshift` algortmu, který je však ve výpisu @C:PinkNoise[] vynechán.
 #figure(
   code(
     ```C
     while (i < scene->sampleCount) {
-      // Implementace algoritmu Xorshift ve 32-bitové verzi (zde vynecháno)
-      ...
-
+      // Implementace algoritmu Xorshift vynechána, výstupem je `randomFloat`
       // Generace růžového šumu pomocí Voss-McCartenova algoritmu s 32 iteracemi
+
       sum = 0.0f;
       for (n = 0; n < 31; n++) {
         pinkBuffer[n] = (pinkBuffer[n] + randomFloat) * 0.5f;
         sum += pinkBuffer[n];
       }
-      pinkNoiseBuffer[i] = sum * 0.03125f; // Vypočítání průměrné hodnoty
+      pinkNoiseBuffer[i] = sum * 0.03125f; // Výpočet průměrné hodnoty
 
       i++;
     }
@@ -476,16 +537,16 @@ Pro generaci růžového šumu jsem zvolil _Voss-McCartneyův_. Pro generaci ná
 ) <C:PinkNoise>
 
 === Generace nízkofrekvenčního šumu
-Nízkofrekvenční šum je využit při generaci základního zvuku motoru v otáčkách blízko otáčkám volnoběhu. Pro jeho generaci je také využit _32-bitový_ `Xorshift`.
+Nízkofrekvenční šum je využit při generaci základního zvuku motoru ve volnoběhu.
 
 #pagebreak()
 
 
 == Výpočetní fáze
-V této fázi jsou paralelně vypočteny vzorky jednotlivých zvukových stop. Konkrétně jde o vzorky základní zvukové stopy motoru a o vzorky zvuku klapání ventilů.
+V této fázi jsou paralelně vypočteny vzorky základní a ventilové zvukové stopy.
 
 === Základní zvuková stopa
-Základní zvuková stopa odpovídá zvuku spalování v motoru. Vzorky stopy jsou vypočítány pomocí fáze, která již byla vypočítána v předvýpočetní fázi. Zvuková stopa je zachycena ve spektogramu @OBR:spek[].
+Tato stopa odpovídá zvuku spalování v motoru. Vzorky stopy jsou vypočítány pomocí předvypočtené fáze, výsledná zvuková stopa je zachycena ve spektogramu @OBR:spek[].
 
 #figure(
   image("images/base.png", width: 60%),
@@ -493,7 +554,7 @@ Základní zvuková stopa odpovídá zvuku spalování v motoru. Vzorky stopy js
 ) <OBR:spek>
 
 === Zvuk klapání ventilů
-Zvuk klapání ventilů je pro celkový zvuk motoru překvapivě důležitý, zejména při nízkých otáčkách. Pro výpočet zvuku ventilů je potřeba znát časy, kdy je vačková hřídel v kontaktu s ventily.\
+Zvuk klapání ventilů je pro celkový zvuk motoru překvapivě důležitý, zejména v nízkých otáčkách. Pro výpočet zvuku ventilů je nutno znát časy, kdy je vačková hřídel v kontaktu s ventily.\
 
 Každý válec má sací a výfukový ventil, každý z nich je otevřen jednu dobu každé dvě otáčky. Frekvenci otevření sacího ventilu lze vypočítat pomocí rovnice (@RV:ventil[]).
 
@@ -516,42 +577,39 @@ Tuto pulzovou vlnu posuneme o uživatelem zadanou hodnotu `valvetrain_timing_off
     ```C
     valvetrainBuffer[i] = 2.0f * (fmod(phaseBuffer[i] * 2.0f, TAU) / TAU) - 1.0f;
     ```,
-    caption: [Generace zvuku ventilů]
+    caption: [Generace pilové vlny]
   )
 ) <C:SawtoothWave>
 
 Po modulaci nosné pilové vlny pulzovou vlnou získáme zvukovou stopu, která mimikuje klapání ventilů v motoru. 
 
-
 #pagebreak()
 
 
+
+#page(footer: context [
+  #line(stroke: 0.05em, length: 100%)
+  \*Použití přepínače `-p` vede v některých případech k lepšímu výslednému zvuku.
+])[
 == Kombinační fáze
-V této fázi jsou zkombinovány stopy vzorků z minulé fáze na základě požadavků uživatele (`base_volume` a `valvetrain_volume`). Tato fáze je velice rychlá, jde pouze o násobení vzorků jejich hlasitostí a následné sečtení. V této fázi neprobíhá normalizace, při překročení maximálnní hlasitosti je uživatel je upozorněn.
-
+V této fázi jsou zkombinovány stopy z minulé fáze na základě požadavků uživatele (`base_volume` a `valvetrain_volume`). Tato fáze je velice rychlá, jde pouze o násobení vzorků jejich hlasitostí a následné sečtení.
 == _Post-processing_ fáze
-Tato část je velice složitá, a tak i časově náročná. Uživatel ji může přeskočit pomocí přepínače `-p` (_preview_).\
-
-Cílem této fáze je vyplnit vyšší frekvence smysluplnými daty. Toho docílíme tvorbou harmonických frekvencí kombinovaného pole frekvencí.\
+Tato část je časově nejnáročnější, uživatel ji může přeskočit pomocí přepínače `-p` (_preview_)\*. Cílem je vyplnit vyšší frekvence, čehož je docíleno pomocí tónového posunu celé zvukové stopy.
 
 === _Fourierova_ transformace
-Při výpočtu polí byla ztracena informace o frekvenci, potřebujeme ji získat pomocí _Fourierovy transformace_ (viz rovnice @RV:fourier[]). @WIKI:Fourier
+K tónovému posunu je třeba zvýšit frekvenci vlny, frekvenci získáme pomocí _Fourierovy_ transformace (viz rovnice @RV:fourier[]). @WIKI:Fourier
 
 $ hat(f)(xi) = integral^infinity_(-infinity) f(x) dot e^(-i 2 pi xi x) dot delta x, quad forall xi in RR $ <RV:fourier>
 
-K jejímu výpočtu byl využit _Cooley-Tukeyovský_ urychlený algoritmus, který využívá komplexních čísel a rekurze. Má adaptace tohoto algoritmu je ve výpisu @C:fourier[]. @WU:FFT
+K jejímu výpočtu byl využit _Cooley-Tukeyovský_ urychlený algoritmus, který využívá komplexních čísel a rekurze. Má implementace tohoto algoritmu je ve výpisu @C:fourier[]. @WU:FFT
 
 #figure(
   code(
     ```C
     void fft(complex float *input, uint64_t n, complex float *temp) {
-      if (n > 1) {
-        uint64_t k, m;
-        complex float w = 0.0f + (0.0f * I);
-        complex float z = 0.0f + (0.0f * I);
-        complex float *even = temp; 
-        complex float *odd = temp + (n / 2);
+      // Přeskočena deklarace proměnných
 
+      if (n > 1) {
         for (k = 0; k < (n / 2); k++) {
           even[k] = input[2 * k];
           odd[k] = input[2 * k + 1];
@@ -574,73 +632,21 @@ K jejímu výpočtu byl využit _Cooley-Tukeyovský_ urychlený algoritmus, kter
     caption: [Adaptace algoritmu rychlého _Fourierova_ algoritmu @WU:FFT]
   )
 ) <C:fourier>
-
-Podobně funguje i inverzní funke `inverseFastFourierTransform`.\
-
-Takto převádět zvukovou stopu do frekvenční dimenze lze pouze v případě, že frekvence zůstane konstantní. 
-
-#pagebreak()
+]
 
 === Tónový posun
-Pro zvukové stopy s proměnlivou frekvencí je třeba využít složitější algoritmus: pole rozdělíme na malá okna, která se vzájemně překrývají. Každé okno trvá pouze několik milisekund, cílem je získat okamžité frekvence v daném čase. Okna převedeme do frekvenční domény pomocí _FFT_ algoritmu (jako velikost oken je proto vhodné zvolit mocninu dvou). Tato okna složíme zpět do zvukové stopy, přičemž roztáhneme mezery mezi nimi (dle faktoru tónového posunu).
+Takto převádět zvukovou stopu do frekvenční dimenze lze pouze v případě, že frekvence zůstane konstantní. V případě, že je frekvence proměnná, je zapotřebí rozdělit zvukovou stopu na malé části, ve kterých je frekvence téměř konstantní. Tyto části (dále okna) se překrývají, aby se po jejich složení zpět mohli roztáhnout mezery mezi nimi (a tak se zvýšila frekvence bez zrychlení zvukové stopy).
 
-=== Hanningovo okno
-Při spojování oken mezi nimi vznikají prudké přechody (vlivem nesynchronyzovaných fází), které se ve zvuku projeví jako bzučení. Tento jev se nazývá _spektrální přeliv_, lze mu částečně předejít použitím _Hanningova okna_, které je definováno rovnicí (@RV:Hanning[]). @SD:Hanning
+=== Potlačení spektrálního přelivu
+Okna však z důvodu nesynchronizovaných fází nenavazují a vzniká nežádoucí bzučení (anglicky _spectral leakage_), k omezení tohoto jevu je využito _Hanningovo_ okno (viz rovnice (@RV:Hanning[])), které tyto náhlé přechody vyhlazuje. 
+V současnosti se pro synchronizaci fází zkoumá využití umělé inteligence.
 
-$ w_H(n) = cases(0\,5[1 - cos(tau n / N)]\; quad 0 <= n = N - 1 , quad quad quad quad quad quad 0 quad "jinak") $ <RV:Hanning>
+$ w_H(n) = cases(0\,5 dot [1 - cos(tau n / N)]\; quad 0 <= n = N - 1 , quad quad quad quad quad quad 0 quad "jinak") $ <RV:Hanning>
 
-Tato rovnice je v kódu využita pro předvypočítání _Hanningova okna_, viz výpis @C:Hanning[].
-
-#figure(
-  code(
-    ```C
-    while (i < windowSize) {
-      hanning[i] = 0.5f * (1.0f - cos((TAU * i) / ((float) windowSize - 1.0f)));
-      i++;
-    }
-    ```,
-    caption: [Implementace _Hanningova okna_]
-  )
-) <C:Hanning>
-
-Přestože bylo využito _Hanningovo okno_, _spektrální přeliv_ přetrvává. K jeho eliminaci se využívají složitější algoritmy, jako například ------. V současnosti se pro synchronizaci fází zkoumá využití umělé inteligence.
-
-
-#pagebreak()
-
+Celý tento proces je vykonán čtyřikrát (paralelně), výsledné tónově posunuté vlny jsou zkombinovány, jejich amplitudy jsou s rostoucí frekvencí snižovány.
 
 == Zapisovací fáze
-Data z předchozí fáze se zapíší do výsledného souboru `WAV`. Předtím se však vzorky musí převést do správného datového formátu, k tomu využijeme funkci `convert`, který využívá ukazatel typu `void ` pro generičnost. Převod z typu `float` na typ `uint8_t` (pro _8 bitové audio_) nebo `int16_t` (pro _16 bitové audio_) je triviální, pro export _32 bitového_ audia není převod potřeba.\
-
-Nejobtížnějším převodem je převod pro export _24 bitového audia_, jelikož pro jeho zápis jsou využity 3 čísla typu `uint8_t` (součet _bitů_ je 24). Toho docílíme pomocí kódu ve výpisu @C:FloatTo3x8[].
-
-#figure(
-  code(
-    ```C
-    uint8_t *buffer = (uint8_t *) voidBuffer; // 3x delší
-
-    uint64_t k = 0;
-    int32_t currentSample = 0;
-
-    while (i < sampleCount) {
-      currentSample = (floatBuffer[i] * 8388607); // 8_388_607 = 2^24 / 2
-
-      // Rozdělení 24 bitového čísla do tří 8 bitových čísel
-      buffer[k] = (uint8_t) ((currentSample) & 0xFF);
-      buffer[k + 1] = (uint8_t) ((currentSample >> 8) & 0xFF);
-      buffer[k + 2] = (uint8_t) ((currentSample >> 16) & 0xFF);
-
-      i++;
-      k += 3;
-    }
-
-    ```,
-    caption: [Převod pole typu `float` na trojnásobně dlouhé pole typu `uint8_t`]
-  )
-) <C:FloatTo3x8>
-
-=== Anatomie souboru `WAV`
-Soubor `WAV` se skládá z hlavičky, ve které jsou uloženy metadata, a z pole vzorků. Hodnoty potřebné v hlavičce jsou v tabulce @TAB:WAV[] @SAPP:Wave.
+Vzorky je zapotřebí převést do správného datového formátu, to zajišťuje funkce `convert`, která využívá ukazatel typu `void` pro imitaci generičnosti. 8 _bitové_ vzorky jsou tvořeny s využitím bitových operací. Po převodu na správný typ lze začít vepisovat data do binárního souboru `WAV` dle Tab. @TAB:WAV[]. @SAPP:Wave
 
 #figure(table(
   columns: (0.15fr, 1fr, 0.3fr, 2fr),
@@ -680,23 +686,23 @@ Soubor `WAV` se skládá z hlavičky, ve které jsou uloženy metadata, a z pole
   table.cell(
     rowspan: 3,
     align: horizon,
-    rotate(-90deg, reflow: true)[data],
+    rotate(-90deg, reflow: true)[`data`],
   ),
 
   // "data" sub-chunk
   [`Subchunk2ID`], [4], [Řetězec "data" v `ASCII` formátu],
   [`Subchunk2Size`], [4], [`NumSamples*NumChannels*BitsPerSample/8`],
-  [`data`], [-], [Pole vzorků],
+  [`data`], [-], [Samotné vzorky],
 ),
 caption: [Hodnoty v hlavičce souboru `WAV` @SAPP:Wave],
 ) <TAB:WAV>
 
-Data jsou do binárního souboru `WAV` zapsány pomocí funkce `fwrite`.
-
+Po této hlavičce následuje zápis vzorků.
 
 #pagebreak()
 
 
+/*
 = Možné rozšíření
 Tento projekt nabízí mnoho možností v rámci rozšíření. Za nejdůležitější z nich považuji podporu operačního systému _Windows_, která je v současnosti možná pouze s použitím _WSL_. Dalším možným vylepšením je usnadnění použití _Adess_ dalšími aplikacemi, které mohou uživateli nabídnout snažší ovládání pomocí grafického uživatelského rozhraní. _Adess_ už je možno takto použít, můj bratr vytvořil program, který dokáže ovládat _Adess_ pomocí plynu a brzdu, což může být pro uživatele výrazně snažší. Pokud bych se rozhodl pro tento přístup, pravděpodobně bych zvolil tvorbu knihovny namísto vlastní aplikace a soustředil bych se na samotnou generaci kódu (nikoliv _parsování_ a práci se soubory).\
 
@@ -716,6 +722,8 @@ Tento projekt vedl k značnému rozvinutí mých znalostí ohledně programován
   image("images/final.png", width: 100%),
   caption: [Hotová zvuková stopa \[`Spek`\]],
 ) <OBR:final>
+
+*/
 
 #pagebreak()
 
