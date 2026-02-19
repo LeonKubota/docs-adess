@@ -1,5 +1,12 @@
+// For counting words, may not work on MacOS
 #import "@preview/wordometer:0.1.5": word-count, total-words
 #show: word-count.with(exclude: (heading, raw, strike))
+
+// For flowchart
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+
+// Basically TikZ
+#import "@preview/cetz:0.4.2"
 
 // Making the footer for the title page
 #set page(footer: context {
@@ -179,6 +186,9 @@ _Adess_ je aplikace přístupná v příkazové řádce, která procedurálně g
 #heading(outlined: false)[Abstract]
 Adess is an application that runs in the terminal, it procedurally generates the sound of combustion engines for use in animation and film production. The generation is fully customizable by the user through "adess" configuration files in a proprietary DST "language" (data storage thing). These files contain important values about the format and characteristics of the desired sound and keyframes, that determine the sounds change throughout time. The values from these files are loaded into memory and subsequently used for procedural parallel synthetization of engine sounds. The output of this generation is a buffer of samples, which are exported into a _WAV_ file.
 
+#heading(outlined: false)[注釈]
+アデスは、ターミナルで実行されるアプリケーションで、アニメーションや映画制作に使用するための内燃機関の音を手続き的に生成します。この生成は、独自のDST「言語」（データストレージ用のもの）の「adess」設定ファイルを通じて、ユーザーによって完全にカスタマイズ可能です。これらのファイルには、望ましい音の形式や特徴に関する重要な値と、時間の経過に伴う音の変化を決定するキーフレームが含まれています。これらのファイルからの値はメモリに読み込まれ、その後、エンジン音の手続き的な並列合成に使用されます。この生成の出力は、WAVファイルにエクスポートされるサンプルのバッファです。
+
 #v(1fr)
 
 #heading(outlined: false)[Čestné prohlášení]
@@ -231,11 +241,10 @@ Pro zkompilování jsem využil `CMake` a běžně používaný _compiler_ `GCC`
 
 Při psaní zdrojového kódu jsem využil několika nástrojů:\
 
+- `CMake` -- již zmíněný nástroj pro usnadnění kompilace. @CMAKE:CMake
 - `Sonic Visualiser` -- nástroj pro analýzu zvuku, umožňuje spektrální i vlnovou analýzu. @CDM:SonicVisualiser
 - `Spek` -- jednodušší, zato rychlejší a uživatelsky přívětivější nástroj pro analýzu zvuku. @AK:Spek
 - `Valgrind` -- nástroj běžící v příkazové řádce pro analýzu paměti programu za běhu, je velice užitečný pro zamezení únikům paměti. @VG:Valgrind
-// TODO - `neovim` --
-
 
 = Zvuk
 Abychom dokázaji zvuk tvořit, je potřeba mu alespoň povrchově porozumět. Jako zvuk označujeme vlnění částic vzduchu. Čím rychleji tyto částice kmitají (jejich frekvence), tím vyšší tón slyšíme; čím větší je amplituda vlnění, tím hlasitější zvuk slyšíme. Jako lidé slyšíme zvuky o frekvencích od $20$ až $20000$ Hz a hlasitosti alespoň $0$ dB. @DOSITS:Loudness
@@ -309,6 +318,9 @@ V Tab. @TAB:options[] jsou popsány přepínače.
 ) <TAB:options>
 
 == Parsování příkazů
+Při spuštění načte aplikace argumenty do dvojitého ukazatele typu `char` (v kódu: `**argv`). Řetězec znaků na indexu 1 je porovnán s názvy příkazů, a pokud dojde ke shodě, příkaz je spuštěn pomocí funkce `execute`. Ta zavolá požadovanou implementaci příkazu pomocí ukazatele funkce. Kontrola vstupu je provedena na úrovni jednotlivých příkazů v příslušné funkci.\
+
+Parsování přepínačů je komplexnější, jelikož některé přepínače požadují hodnotu (implementovány jsou i parametry s několika hodnotami, ty však nejsou využity). K zjišťování vlastností přepínaču je využit tento řetězec: `"hn.d.ep"`. Jednotlivá písmena představují možné přepínače, pokud se za písmenem vyskytuje znak `'.'`, jde o parametr s hodnotou (několik hodnot je označeno znakem `':'`). Aktivní parametry se ukládají do pole `bool g_opts[8]`, jejich hodnoty jsou uloženy v pole řetězců `char *g_vals[8][2]`.\
 
 
 #pagebreak()
@@ -428,16 +440,104 @@ Nejvíce parametrů obsahuje soubor motoru, jsou popsány v Tab. @TAB:engine[].
 Tyto soubory jsou při zavolání příkazu `adess render` načteny do paměti a zpracovány, výsledný soubor bude uložen do adresáře určeného hodnotou `output_path` v projektovém souboru.
 
 === Parsování nastavovacích souborů <KAP:Parse>
+Parsování nastavovacích souborů je rozděleno do dvou částí: nejprve je zkontrolován syntax, existence jednotlivých funkcí a jejich typ; následně je možné načíst hodnotu proměnné ze souboru bez kontrol.\
+
+Parser začne na začátku řádku, postupuje skrze něj pomocí aritmetiky ukazatelů (anglicky _pointer arithmetic_). Pokud nalezne na chybu, ukončí program a zobrazí zprávu:\
+#align(center)[``` fatal: [VW-1.9-tdi.adess:11]: incorrect type, integer expected ```]
 
 
 #pagebreak()
 
 
-= Postup _renderování_ zvuku
+= _Renderování_ zvuku
 Uživatel pomocí příkazu `adess render` se jménem scény jako argument spustí několikafázový proces _renderování_. Ten je podrobně popsán v následujících podkapitolách.
 
-== Čtení vstupních dat
-Nejprve se pomocí procesu popsaného v kapitole @KAP:Parse[] naplní struktury `Project`, `Scene` a `Engine`.
+== Struktura renderovacího procesu
+Renderovací proces je vysoce optimalizován a paralelizován, jeho struktura je zaznamenána v grafu @GRP:Pipeline[].
+
+#figure(
+  cetz.canvas({
+    import cetz.draw: *
+    circle((0, 1.25), radius: 0.01cm, stroke: white)
+    // The thing on the left
+    content((-9, 1), "I.")
+    content((-9, -1), "II.")
+    content((-9, -3), "III.")
+    content((-9, -5), "IV.")
+    content((-9, -7), "V.")
+    content((-9, -9), "VI.")
+
+    set-style(mark: (end: ">"))
+
+    // Layer 1 - načtení dat
+    content((0, 1), "načtení dat", frame: "rect", padding: 0.2cm)
+    line((0, 0.5), (0, 0), (-6, 0), (-6, -0.5))
+    line((-2, 0), (-2, -0.5))
+    line((2, 0), (2, -0.5))
+    line((0, 0), (6, 0), (6, -0.5))
+
+    // Layer 2 - interpolace, hnědý šum, nízkofrekvenční šum
+    content((-6, -1), "nízkofrekvenční šum", frame: "rect", padding: 0.2cm)
+    content((-2, -1), "stabilní hnědý šum", frame: "rect", padding: 0.2cm)
+    content(( 2, -1), "interpolace", frame: "rect", padding: 0.2cm)
+    content(( 6, -1), "růžový šum", frame: "rect", padding: 0.2cm)
+    line((-6, -1.5), (-6, -2), (-2, -2), (-2, -2.5))
+    line((-2, -1.5), (-2, -2.5))
+    line(( 1.9, -1.5), (1.9, -2), (-2, -2), (-2, -2.5))
+    line(( 2.1, -1.5), (2.1, -2.5))
+    line(( 6, -1.5), (6, -2), (2.1, -2), (2.1, -2.5))
+
+    // Layer 3 - základní stopa, ventily
+    content((-2, -3), "základní stopa", frame: "rect", padding: 0.2cm)
+    content(( 2, -3), "klapání ventilů", frame: "rect", padding: 0.2cm)
+    line((-2, -3.5), (-2, -4), (-4, -4), (-4, -4.5))
+    line((2, -3.5), (2, -4), (-4, -4), (-4, -4.5))
+
+    // Layer 4 - kombinace
+    content((-4, -5), "kombinace", frame: "rect", padding: 0.2cm)
+    line((-4, -5.5), (-4, -6.5))
+
+    // Layer 5 - post processing 
+    line((-4, -7.5), (-4, -8.5))
+    content((-4, -7), [_post processing_], frame: "rect", padding: 0.2cm)
+
+    content((2, -4.4), text(size: 0.8em)[paralelní podprocesy], padding: 0.2cm)
+    line((-2.5, -6.9), (-0.25, -6.9), (-0.25, -5), (0.25, -5))
+    line((-0.25, -5), (-0.25, -6), (0.25, -6))
+    line((-0.25, -5), (-0.25, -7), (0.25, -7))
+    line((-0.25, -5), (-0.25, -8), (0.25, -8))
+    // Sublayer - paralell
+    content((2, -5), "1: tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -6), "2: tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -7), "3: tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -8), "4: tónový posun", frame: "rect", padding: 0.2cm)
+    line((3.75, -5), (4.5, -5), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
+    line((3.75, -6), (4.5, -6), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
+    line((3.75, -7), (4.5, -7), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
+    line((3.75, -8), (4.5, -8), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
+
+    // Layer 4 - zápis 
+    content((-4, -9), "zápis do souboru", frame: "rect", padding: 0.2cm)
+
+    circle((0, -9.75), radius: 0.01cm, stroke: white)
+  }),
+  caption: [Struktura _renderovacího_ procesu]
+) <GRP:Pipeline>
+
+Každý akce v tomto grafu značí paralelně běžící proces. Tyto procesy jsou vykonávány ve fázích (značeny římským číslem vlevo). Využití paměti programu je zobrazeno v grafu @GRP:Memory[].
+
+#v(1fr)
+
+// TODO
+#figure(
+  cetz.canvas({
+    import cetz.draw: *
+    line((-8, 0), (8, 0), mark: (end: ">"))
+  }),
+  caption: [Spotřeba paměti při _renderování_]
+) <GRP:Memory>
+
+#pagebreak()
 
 == Předvýpočetní fáze
 V této fázi se předvypočítají důležitá pole pro následující fáze. Tyto výpočty probíhají paralelně.
@@ -723,9 +823,9 @@ Tento projekt vedl k značnému rozvinutí mých znalostí ohledně programován
   caption: [Hotová zvuková stopa \[`Spek`\]],
 ) <OBR:final>
 
+#pagebreak()
 */
 
-#pagebreak()
 
 
 = Seznam použitých zdrojů
