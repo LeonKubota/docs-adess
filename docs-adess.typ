@@ -39,13 +39,13 @@
   )
 ]
 
-#v(0.5fr)
+#v(0.4fr)
+#align(center)[#image("images/logo.png", width: 50%)]
 #text(18pt)[#align(center)[*Adess -- umělecky dirigovaný syntetizér zvuku motorů*]]
 #v(-0.25cm)
 #align(center)[ročníkový projekt]
-#align(center)[#highlight[*_Slova: #total-words / 2000_*]]
+//#align(center)[#highlight[*_Slova: #total-words / 2000_*]]
 #v(0.25cm)
-#align(center)[#image("images/1.9TDIModelUkazka.png", width: 40%)]
 #v(0.5fr)
 
 #set text(
@@ -142,7 +142,7 @@
 Zpracování v požadovaném rozsahu se řídí obecně závaznými pokyny zpracování ročníkových projektů. Řešitel elektronicky odevzdáve stanoveném termínu dokumentaci, prezentaci, poster a další vyžádané přílohy (např. zdrojové kódy, ukázková data). Před obhajobou řešitel odevzdá jeden výtisk stejné dokumentace s podepsaným prohlášením o autorství a jeden poster, neurčí-li vedoucí jinak. Hodnotí se odborné zpracování úlohy, použití návrhových vzorů, prezentace při obhajobě a funkcionalita produktu.
 
 #heading(level: 2, outlined: false)[Popis (povinná část):]
-Vytvořte konzolovou aplikaci pro procedurální syntézu zvuků motorů určenou pro film a animaci. Program generuje zvukové vzorky na základě uživatelské konfigurace a klíčových snímků definovaných ve vlastním datovém formátu _DST_.
+Vytvořte konzolovou aplikaci pro procedurální syntézu zvuků motorů určenou pro film a animaci. Program generuje zvukové vzorky na základě uživatelské konfigurace a klíčových snímků definovaných ve vlastním datovém formátu.
 
 #heading(level: 2, outlined: false)[Upřesnění zadání:]
 - Implementace parseru konfiguračních souborů _adess_
@@ -181,13 +181,13 @@ Vytvořte konzolovou aplikaci pro procedurální syntézu zvuků motorů určeno
 
 
 #heading(outlined: false)[Anotace]
-_Adess_ je aplikace přístupná v příkazové řádce, která procedurálně generuje zvuky spalovacích motorů pro využití v animaci a filmu. Generace je plně ovladatelná uživatelem prostřednictvím nastavovacích souborů _adess_ ve vlastním "jazyce" _DST_ (datová ukládací věc). V těchto souborech jsou uloženy důležité hodnoty o formátu a charakteristice požadovaného zvuku a klíčové snímky, které určují jeho přeměnu v čase. Hodnoty z těchto souborů jsou načteny do paměti a následovně využity pro procedurální paralelní syntézu zvuků motorů. Výstupem této generace je pole vzorků, které se uloží do souboru _WAV_. 
+`Adess` je aplikace přístupná v příkazové řádce, která procedurálně generuje zvuky spalovacích motorů pro využití v animaci a filmu. Generace je plně ovladatelná uživatelem prostřednictvím nastavovacích souborů `adess` ve vlastním "jazyce". V těchto souborech jsou uloženy důležité hodnoty o formátu a charakteristice požadovaného zvuku a klíčové snímky, které určují jeho přeměnu v čase. Hodnoty z těchto souborů jsou načteny do paměti a následovně využity pro procedurální paralelní syntézu zvuků motorů. Výstupem této generace je pole vzorků, které se uloží do souboru `WAVE`. 
 
 #heading(outlined: false)[Abstract]
-Adess is an application that runs in the terminal, it procedurally generates the sound of combustion engines for use in animation and film production. The generation is fully customizable by the user through "adess" configuration files in a proprietary DST "language" (data storage thing). These files contain important values about the format and characteristics of the desired sound and keyframes, that determine the sounds change throughout time. The values from these files are loaded into memory and subsequently used for procedural parallel synthetization of engine sounds. The output of this generation is a buffer of samples, which are exported into a _WAV_ file.
+`Adess` is an application that runs in the terminal, it procedurally generates the sound of combustion engines for use in animation and film production. The generation is fully customizable by the user through `adess` configuration files in a proprietary "language". These files contain important values about the format and characteristics of the desired sound and keyframes, that determine the sounds change through time. The values from these files are loaded into memory and subsequently used for procedural parallel synthetization of engine sounds. The output of this generation is a buffer of samples, which are exported into a `WAVE` file.
 
 #heading(outlined: false)[注釈]
-アデスは、ターミナルで実行されるアプリケーションで、アニメーションや映画制作に使用するための内燃機関の音を手続き的に生成します。この生成は、独自のDST「言語」（データストレージ用のもの）の「adess」設定ファイルを通じて、ユーザーによって完全にカスタマイズ可能です。これらのファイルには、望ましい音の形式や特徴に関する重要な値と、時間の経過に伴う音の変化を決定するキーフレームが含まれています。これらのファイルからの値はメモリに読み込まれ、その後、エンジン音の手続き的な並列合成に使用されます。この生成の出力は、WAVファイルにエクスポートされるサンプルのバッファです。
+`Adess`はターミナルで動作するアプリケーションで、アニメーションや映画制作に使用するために、燃焼エンジンの音を手続き的に生成します。この生成は、独自の「言語」である`adess`設定ファイルを通じて、ユーザーによって完全にカスタマイズ可能です。これらのファイルには、期待される音のフォーマットと特性、そして時間の経過に伴う音の変化を決定するキーフレームに関する重要な値が含まれています。これらのファイルからの値はメモリにロードされ、その後、エンジン音の手続き的な並列合成に使用されます。この生成の出力は、`WAVE`ファイルにエクスポートされるサンプルのバッファです。
 
 #v(1fr)
 
@@ -223,9 +223,19 @@ Prohlašuji, že jsem jediným autorem tohoto projektu, všechny citace jsou ř�
 
 
 = Úvod
+Cílem tohoto projektu je vytvořit program, který dokáže na základě uživatelských pokynů generovat zvuk motorů. Cílem není generovat zvuk živě, ale generovat jej pro využití ve filmu a animaci.\
+
+V současnosti se pro tvorbu zvuku motorů využívá nahrávání skutečných motorů a následná digitální manipulace. Tento přístup umožňuje nejvyšší kvalitu zvuku, je však velice náročný a nákladný. @MIX:EngineFXWithPersonalityInPixarsCars\
+
+Rozhodl jsem se zvuk tvořit synteticky, přestože se v současnosti více využívá simluace. Výhodou syntézy je násobně kratší doba obratu a vyšší míra ovládání, uživatel tedy může rychleji a více experimentovat. Tento přístup je také možné značně urychlit paralelizací, jelikož obsahuje mnoho na sobě nezávislých prvků. @GH:EngineSim @IEEE:EngineSoundSynthesis
+
+Aplikace se ovládá skrze nastavovací soubory, ve kterých uživatel charakterizuje vlastnosti motoru, přeměnu hodnot skrze čas a parametry výstupního souboru `WAVE`. Tyto nastavovací soubory jsou zapisovány ve vlastním "jazyce" pomocí párů klíč -- hodnota. Pro generaci zvuku použije uživatel příkaz `adess render` a název scény, aplikace tento soubor vytvoří
+
+/*
 Tvorba zvuku motorů pro využití ve animaci je velice složitá, konvenčním způsobem je nahrát zvukové stopy skutečného motoru a pomocí komplexních digitálních manipulací získat finálnú zvuk. Takováto tvorba zvuku je velice časově náročná, umožňuje však precizní úpravu zvuku pro tvorbu působivých výsledků. Tento způsob je však zcela nevyhovující menším studiům či jednotlivcům, kteří nedisponují stovky hodin a neovládají tuto tvůrčí disciplínu. @MIX:EngineFXWithPersonalityInPixarsCars
 
 Druhým postupem je zvukovou stopu generovat, toho lze docílit simulací tlakových vln v motoru nebo syntézou, tedy tvorbou zvuku pomocí matematických algoritmů. V této práci využívám pro generaci zvuku spalovacích motorů syntetický přístup.
+*/
 
 #pagebreak()
 
@@ -452,8 +462,8 @@ Parser začne na začátku řádku, postupuje skrze něj pomocí aritmetiky ukaz
 = _Renderování_ zvuku
 Uživatel pomocí příkazu `adess render` se jménem scény jako argument spustí několikafázový proces _renderování_. Ten je podrobně popsán v následujících podkapitolách.
 
-== Struktura renderovacího procesu
-Renderovací proces je vysoce optimalizován a paralelizován, jeho struktura je zaznamenána v grafu @GRP:Pipeline[].
+== Struktura _renderovacího_ procesu
+_Renderovací_ proces je vysoce optimalizován a paralelizován, jeho struktura je zaznamenána v grafu @GRP:Pipeline[].
 
 #figure(
   cetz.canvas({
@@ -507,10 +517,10 @@ Renderovací proces je vysoce optimalizován a paralelizován, jeho struktura je
     line((-0.25, -5), (-0.25, -7), (0.25, -7))
     line((-0.25, -5), (-0.25, -8), (0.25, -8))
     // Sublayer - paralell
-    content((2, -5), "1: tónový posun", frame: "rect", padding: 0.2cm)
-    content((2, -6), "2: tónový posun", frame: "rect", padding: 0.2cm)
-    content((2, -7), "3: tónový posun", frame: "rect", padding: 0.2cm)
-    content((2, -8), "4: tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -5), "1. tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -6), "2. tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -7), "3. tónový posun", frame: "rect", padding: 0.2cm)
+    content((2, -8), "4. tónový posun", frame: "rect", padding: 0.2cm)
     line((3.75, -5), (4.5, -5), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
     line((3.75, -6), (4.5, -6), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
     line((3.75, -7), (4.5, -7), (4.5, -8.65), (-0.5, -8.65), (-0.5, -7.1), (-2.5, -7.1))
@@ -524,15 +534,75 @@ Renderovací proces je vysoce optimalizován a paralelizován, jeho struktura je
   caption: [Struktura _renderovacího_ procesu]
 ) <GRP:Pipeline>
 
-Každý akce v tomto grafu značí paralelně běžící proces. Tyto procesy jsou vykonávány ve fázích (značeny římským číslem vlevo). Využití paměti programu je zobrazeno v grafu @GRP:Memory[].
+Každý blok v tomto grafu značí paralelně běžící proces. Tyto procesy jsou vykonávány ve fázích (značeny římským číslem vlevo). Využití paměti programu je zobrazeno v grafu @GRP:Memory[].
 
-#v(1fr)
+//#v(1fr)
 
-// TODO
 #figure(
   cetz.canvas({
     import cetz.draw: *
-    line((-8, 0), (8, 0), mark: (end: ">"))
+
+    // Separators
+    let h = 5
+    let a = -8.25
+    let i = 0
+    while i < 5 {
+      a += 2.75
+      line((a, 0), (a, h))
+      i += 1
+      if i == 1 { content((a - (2.75 / 2), h), "I.") }
+      if i == 2 { content((a - (2.75 / 2), h), "II.") }
+      if i == 3 { content((a - (2.75 / 2), h), "III.") }
+      if i == 4 { content((a - (2.75 / 2), h), "IV.") }
+      if i == 5 { content((a - (2.75 / 2), h), "V.") }
+    }
+    content((a - (2.75 / 2) + 2.75, h), "VI.")
+
+    // I.
+    content((-7, 0.25), "vstupní data") // end: write
+    rect((-8.25, 0), (8 - 2.5, 0.5))
+
+    // II.
+    content((-7 + 2.75, 0.25 + 0.55), "hnědý šum") // end: write
+    rect((-8.25 + 2.75, 0.6), (8 - 2.5, 1.1))
+    content((-7 + 2.75, 0.25 + 1.2), "růžový šum") // end: combine
+    rect((-8.25 + 2.75, 1.2), (8 - 2.5 - 5.5, 1.7))
+    content((-7 + 2.75, 0.25 + 1.8), "nízkofr. šum") // end: combine
+    rect((-8.25 + 2.75, 1.8), (8 - 2.5 - 5.5, 1.8 + 0.5))
+
+    // III.
+    content((-7 + 5.5, 2.6), "základní stopa")
+    rect((-8.25 + 5.5, 2.4), (8 - 2.5 - 5.5, 2.4 + 0.5))
+    content((-7 + 5.5, 3.2), "klapání ventilů")
+    rect((-8.25 + 5.5, 3), (8 - 2.5 - 5.5, 3 + 0.5))
+
+    // IV.
+    line((8-2.5-5.5, 1.45), (8-2.5-5.5+1.425 - 1, 1.45), (8-2.5-5.5+1.425 - 1, 3.6), mark: (end: ">"))
+    line((8-2.5-5.5, 1.45 + 0.6), (8-2.5-5.5+1.425 - 1, 1.45 + 0.6))
+    line((8-2.5-5.5, 1.45 + 1.2), (8-2.5-5.5+1.425 - 1, 1.45 + 1.2))
+    line((8-2.5-5.5, 1.45 + 1.8), (8-2.5-5.5+1.425 - 1, 1.45 + 1.8))
+
+    content((-7 + 5.5 + 2.75, 3.8), "komb. stopa")
+    rect((-8.25 + 5.5 + 2.75, 3.6), (8.25, 3.6 + 0.5))
+
+    // V.
+    line((8-2.5-5.5 + 4.75, 1.45), (8-2.5-5.5+1.425 + 3.75, 1.45), (8-2.5-5.5+1.425 + 3.75, 3.6), mark: (end: ">"))
+    line((8-2.5-5.5 + 4.75, 1.45 + 0.6), (8-2.5-5.5+1.425 + 3.75, 1.45 + 0.6))
+    line((8-2.5-5.5 + 4.75, 1.45 + 1.2), (8-2.5-5.5+1.425 + 3.75, 1.45 + 1.2))
+    line((8-2.5-5.5 + 4.75, 1.45 + 1.8), (8-2.5-5.5+1.425 + 3.75, 1.45 + 1.8))
+
+    content((-7 + 11 - 0.2, 3.2), "1. tón. pos.")
+    rect((-8.25 + 11, 3), (-8.25 + 5.5 + 2.75 + 4.75, 3 + 0.5))
+    content((-7 + 11 - 0.2, 2.6), "2. tón. pos.")
+    rect((-8.25 + 11, 2.4), (-8.25 + 5.5 + 2.75 + 4.75, 2.4 + 0.5))
+    content((-7 + 11 - 0.2, 0.25 + 1.2), "3. tón. pos.") // end: combine
+    rect((-8.25 + 11, 1.8), (-8.25 + 5.5 + 2.75 + 4.75, 1.8 + 0.5))
+    content((-7 + 11 - 0.2, 0.25 + 1.8), "4. tón. pos.") // end: combine
+    rect((-8.25 + 11, 1.2), (-8.25 + 5.5 + 2.75 + 4.75, 1.2 + 0.5))
+
+    // VI.
+    line((8-2.5-5.5 + 5.5, 0.25), (8-2.5-5.5+1.425 + 4.5, 0.25), (8-2.5-5.5+1.425 + 4.5, 3.6), mark: (end: ">"))
+    line((8-2.5-5.5 + 5.5, 0.25 + 0.55), (8-2.5-5.5+1.425 + 4.5, 0.25 + 0.55))
   }),
   caption: [Spotřeba paměti při _renderování_]
 ) <GRP:Memory>
@@ -797,39 +867,28 @@ Vzorky je zapotřebí převést do správného datového formátu, to zajišťuj
 caption: [Hodnoty v hlavičce souboru `WAV` @SAPP:Wave],
 ) <TAB:WAV>
 
-Po této hlavičce následuje zápis vzorků.
+Po vepsání této hlavičky následuje zápis vzorků.
 
 #pagebreak()
 
 
-/*
-= Možné rozšíření
-Tento projekt nabízí mnoho možností v rámci rozšíření. Za nejdůležitější z nich považuji podporu operačního systému _Windows_, která je v současnosti možná pouze s použitím _WSL_. Dalším možným vylepšením je usnadnění použití _Adess_ dalšími aplikacemi, které mohou uživateli nabídnout snažší ovládání pomocí grafického uživatelského rozhraní. _Adess_ už je možno takto použít, můj bratr vytvořil program, který dokáže ovládat _Adess_ pomocí plynu a brzdu, což může být pro uživatele výrazně snažší. Pokud bych se rozhodl pro tento přístup, pravděpodobně bych zvolil tvorbu knihovny namísto vlastní aplikace a soustředil bych se na samotnou generaci kódu (nikoliv _parsování_ a práci se soubory).\
+= Rozšíření a budoucnost projektu
+Tento projekt nabízí mnoho možností v rámci rozšíření. Za nejdůležitější z nich považuji podporu operačního systému _Windows_, která je v současnosti možná pouze s použitím _WSL_. Dále se pro urychlení nabízí využití grafické karty. Všechny tyto problémy (a mnoho dalších) lze vyřešit využitím modernějšího programovacího jazyka, za vhodného kandidáta považuji `Odin`, jelikož nabízí schopnost ovládat moderní _hardware_ (`SIMD`, _multithreading_, vlastní alokátory paměti atd.) a má rozsáhlou standardní knihovnu.\
 
-Druhou cestou, kterou by mohl projekt dále postupovat, je využití simulace. Simulace se pro tvorbu zvuku motorů již využívají, (například _engine-sim_ od Angeho Yaghe), tyto simulátory často pracují v reálném čase. Jelikož aplikace _Adess_ nevyžaduje práci v reálném čase, bylo by možné využít _CFD_ simulace. Takto vytvořený zvuk by byl násobně kvalitnější než současný stav _Adess_. @GH:EngineSim
+Další možnou cestou pro tento projekt je využití simulace namísto syntézy. Jelikož atmosféru lze v tomto případě považovat za ideální plyn, což znamená, že na sebe vzájemně částice silově nepůsobý. Pohyb částic by tedy mohl být paralelně vypočítáván pomocí grafické karty. Následně by byl v této 3d scéně umístěn digitální mikrofon, který by snímal simulovaný tlak.
 
 = Závěr
-Syntetická tvorba zvuku je velice obsáhlé a komplexní téma. Je velice obtížné synteticky vytvořit zvuk, který nezní jako byl vytvořen synteticky. Přes značnou komplexitu tohoto témata jsem byl schopen vytvořit produkt, který ukazuje, že v tomto přístupu pro generaci zvuku je potenciál.\
+Syntetická tvorba zvuku je velice obsáhlé a komplexní téma, je velice obtížné synteticky vytvořit zvuk, který zní organicky a uvěřitelně. Přes značnou komplexitu tohoto témata jsem byl schopen vytvořit program, který ukazuje, že v tomto přístupu pro generaci zvuku je potenciál.\
 
 Díky tomuto projektu jsem měl možnost zkombinovat několik různých disciplín: fyziku (zvuk), inženýrství (pro znalost spalovacích motorů) a samozřejmě programování. Pro dosažení vysoké rychlosti programu jsem se naučil základy jazyka `C` a paralelního programování.\
-
-Příklad hotové zvukové stopy je na Obr. @OBR:final[], příklady zvukových stop jsou v kapitole @K:files[].
 
 Tento projekt vedl k značnému rozvinutí mých znalostí ohledně programování a prokázal, že syntetická generace zvuku motorů je možná.
 
 
-#figure(
-  image("images/final.png", width: 100%),
-  caption: [Hotová zvuková stopa \[`Spek`\]],
-) <OBR:final>
-
 #pagebreak()
-*/
 
 
 
 = Seznam použitých zdrojů
 #set bibliography(title: none)
 #bibliography(style: "iso690-numeric-brackets-cs.csl", "zdroje.bib")
-
-= Přílohy <K:files>
